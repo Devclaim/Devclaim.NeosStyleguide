@@ -162,6 +162,15 @@
 	background: #1e1e1e;
 }
 
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-icon-button--boxed:hover {
+	background: #2a2a2a;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-icon-button--boxed:focus-visible {
+	outline: 2px solid #00adee;
+	outline-offset: -2px;
+}
+
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-icon-button--boxed[aria-pressed='true'] {
 	background: #333;
 	color: #fff;
@@ -339,6 +348,12 @@
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow-y: auto;
+	/* scrolls without a scrollbar: one would narrow the screen and move the preview when an element gets longer */
+	scrollbar-width: none;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-main::-webkit-scrollbar {
+	display: none;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header {
@@ -606,11 +621,12 @@
 	background: #fbfaf7;
 }
 
-/* the stages follow the size of their preview smoothly; the old page fades out over the new one */
+/* the stages follow the size of their preview smoothly, at the same speed for every distance (the duration comes
+   from stageHeight.ts); the old page fades out over the new one */
 :is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-gallery__stage, .sg-preview__stage) {
-	transition:
-		height 220ms ease,
-		width 220ms ease;
+	transition-property: height, width;
+	transition-duration: 220ms;
+	transition-timing-function: ease-in-out;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-frame--leaving {
@@ -693,21 +709,21 @@
 	color: #6b6b6b;
 }
 
+/* the labels are the interface's, not the website's: bars like the header of the screen over the room reserved in the
+   page, with a button to open the entry */
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label {
 	position: absolute;
 	left: 0;
 	right: 0;
+	z-index: 1;
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	padding: 0 20px;
-	border: 0;
-	border-top: 1px solid #e6e2d9;
-	border-radius: 0;
-	background: transparent;
-	color: #3a3a3a;
-	font-size: 12px;
-	text-align: left;
+	padding: 0 4px 0 16px;
+	border-top: 1px solid #2a2a2a;
+	background: #161616;
+	color: #fff;
+	font-size: 13px;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label--first {
@@ -719,14 +735,9 @@
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__open {
+	width: 28px;
+	height: 28px;
 	margin-left: auto;
-	color: #0077a8;
-	opacity: 0;
-}
-
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label:hover .sg-gallery__open,
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label:focus-visible .sg-gallery__open {
-	opacity: 1;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-cards {
@@ -756,26 +767,24 @@
 }
 
 /* one element */
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-pills {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-}
-
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-pills button {
-	height: 30px;
-	padding: 0 12px;
-	border: 1px solid #333;
-	border-radius: 999px;
-	background: transparent;
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header-select {
+	max-width: 240px;
+	height: 34px;
+	padding: 0 32px 0 12px;
+	border: 0;
+	border-radius: 6px;
+	appearance: none;
+	background: #1e1e1e
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2.4'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+		no-repeat right 10px center;
 	color: #cfcfcf;
 	font-size: 13px;
+	text-overflow: ellipsis;
+	cursor: pointer;
 }
 
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-pills button[aria-pressed='true'] {
-	border-color: #e8e8e8;
-	background: #e8e8e8;
-	color: #141414;
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header-select:hover {
+	color: #fff;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-preview {

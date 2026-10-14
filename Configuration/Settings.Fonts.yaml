@@ -9,3 +9,5 @@ Neos:
     defaultContext:
       # a site rendered by Fusion or CPX prints the @font-face rules with NeosStyleguide.Fonts.css()
       'NeosStyleguide.Fonts': 'Devclaim\NeosStyleguide\Fonts\FontsHelper'
+      # and the design tokens of the site with NeosStyleguide.Tokens.styleElement(designTokens)
+      'NeosStyleguide.Tokens': 'Devclaim\NeosStyleguide\Tokens\TokensHelper'

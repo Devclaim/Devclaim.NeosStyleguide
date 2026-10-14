@@ -1,8 +1,11 @@
 # Styleguide protocol, version 2
 
 The interface of the styleguide (this package, a plugin of the Neos UI) knows nothing about the frontend. It talks to an **adapter**: whatever
-renders the website (the SvelteKit frontend of this distribution: `Frontend/src/routes/neos/styleguide`; a classic
-Neos project could implement it in PHP with Fusion or CPX). Three parts:
+renders the website (for SvelteKit:
+[Devclaim.NeosStyleguide.Adapter.Svelte](https://github.com/Devclaim/Devclaim.NeosStyleguide.Adapter.Svelte), for CPX
+components inside Neos:
+[Devclaim.NeosStyleguide.Adapter.CPX](https://github.com/Devclaim/Devclaim.NeosStyleguide.Adapter.CPX); a Fusion
+adapter would work like the CPX one). Three parts:
 
 | Part | Who | What |
 | --- | --- | --- |
@@ -229,7 +232,7 @@ an adapter. In the order worth building, each step shows more in the styleguide:
     overrides of a site (4.), or the styleguide saves values the website leaves out.
 4. **The overrides in the pages.** Not part of the protocol, but a change of a token is only seen with it: the
     website renders the property `designTokens` of the site node (`--name: value;` per line) into a `<style>` after its
-    stylesheet, line by line checked (the SvelteKit adapter: `Frontend/src/lib/design/tokens.server.ts`). The preview
+    stylesheet, line by line checked (the SvelteKit adapter: `themeTokens()`, its `tokens.ts`). The preview
     does the same with the tokens of the site in the editor's workspace.
 5. **Login.** Every answer `401` without the Neos backend session. An adapter outside of Neos asks the Neos API with
     the editor's cookie (the answer is the check); an adapter inside Neos (a Flow controller) gets the session when its
@@ -238,9 +241,13 @@ an adapter. In the order worth building, each step shows more in the styleguide:
 6. **Point the interface to it:** `adapter` of the `frontendConfiguration` `Devclaim.NeosStyleguide` of the Neos UI
     (`Configuration/Settings.yaml`), then check it.
 
-A PHP adapter for Fusion would be a Flow package with a controller for the adapter API and one for the preview, which
-renders the Fusion prototype of an entry with the props and the tokens of the site in the editor's workspace (a Fusion
-view around it, the same `<head>` as the website). The interface does not change.
+An adapter in PHP (CPX, Fusion) is a Flow package with a controller for the adapter API and the preview, like
+Devclaim.NeosStyleguide.Adapter.CPX: it reads the theme and checks overrides with the classes of this package
+(`Devclaim\NeosStyleguide\Tokens\Theme`, setting `Devclaim.NeosStyleguide.theme.stylesheets`), takes the sites of the
+editor from `Devclaim\NeosStyleguide\Application\Sites`, and renders an entry with the props and the tokens of the site
+in the same `<head>` as the website. Its controller needs a request pattern of `Neos.Neos:Backend` and a privilege for
+its actions (Neos denies all controller actions that are not granted); it answers `401` itself without a session. The
+interface does not change.
 
 ## Checking an adapter
 

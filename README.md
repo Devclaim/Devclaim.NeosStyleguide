@@ -52,8 +52,11 @@ From GitHub: add `{"type": "vcs", "url": "https://github.com/Devclaim/Devclaim.N
     The adapter and its previews must be on the host of the Neos backend.
 
 3. **The pages of the website** apply the tokens and fonts of their site: the token overrides as `:root` custom
-    properties after the stylesheet, the `@font-face` rules of the uploaded fonts in the `<head>` (Fusion:
-    `NeosStyleguide.Fonts.css()`). The adapters do this for their frontend.
+    properties after the stylesheet, the `@font-face` rules of the uploaded fonts in the `<head>`. A site rendered by
+    Neos (CPX, Fusion) names its stylesheets in `Devclaim.NeosStyleguide.theme.stylesheets` and prints
+    `Theme::styleElement($siteNode->getProperty('designTokens'))` and `FontLibrary::css()` (Fusion:
+    `NeosStyleguide.Tokens.styleElement(...)`, `NeosStyleguide.Fonts.css()`); the same rules check the overrides as in the
+    styleguide.
 
 Fonts: upload them in the media module, or import a directory with `./flow fonts:import <path>`; `./flow fonts:list`
 shows what the styleguide reads from the file names.
@@ -62,8 +65,8 @@ shows what the styleguide reads from the file names.
 
 | Adapter | Frontend |
 | --- | --- |
-| Devclaim.NeosStyleguide.Adapter.Svelte | SvelteKit (headless) |
-| Devclaim.NeosStyleguide.Adapter.CPX | Fusion / CPX (planned) |
+| [Devclaim.NeosStyleguide.Adapter.Svelte](https://github.com/Devclaim/Devclaim.NeosStyleguide.Adapter.Svelte) (npm `@devclaim/neos-styleguide-adapter-svelte`) | SvelteKit (headless) |
+| [Devclaim.NeosStyleguide.Adapter.CPX](https://github.com/Devclaim/Devclaim.NeosStyleguide.Adapter.CPX) | CPX components, inside Neos |
 
 Another frontend: implement [PROTOCOL.md](PROTOCOL.md), see its "Writing an adapter".
 

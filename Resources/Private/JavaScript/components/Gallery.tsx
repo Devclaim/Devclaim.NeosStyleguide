@@ -4,13 +4,14 @@ import { galleryUrl } from '../api';
 import { useData } from '../context';
 import type { EntrySummary } from '../protocol';
 import { navigate } from '../route';
+import { useStageStyle } from './stageHeight';
 import { LoadingBar, usePreviewFrame } from './usePreviewFrame';
 import { useWidth } from './useWidth';
 
 /** the height of a label over an entry, in px of the interface */
 const LABEL = 36;
 
-/** room for the labels in the page, in its own px (the page is scaled) */
+/** room for the labels in the page, in its own px (the page is scaled), and every entry clipped to itself */
 function reserveLabels(document: Document, scale: number) {
 	let style = document.head.querySelector<HTMLStyleElement>('style[data-styleguide-gallery]');
 	if (!style) {
@@ -18,7 +19,11 @@ function reserveLabels(document: Document, scale: number) {
 		style.dataset.styleguideGallery = '';
 		document.head.prepend(style);
 	}
-	style.textContent = `[data-styleguide-entry]{margin-top:${Math.ceil(LABEL / scale)}px}`;
+	// each entry stands alone: what sticks out of it (a skip link waiting above a header, a flyout) does not lie over
+	// its neighbours; a little room for shadows
+	style.textContent =
+		`[data-styleguide-entry]{margin-top:${Math.ceil(LABEL / scale)}px;` +
+		'overflow:clip;overflow-clip-margin:8px}';
 }
 
 /**
@@ -60,15 +65,17 @@ export function Gallery({ entries, width }: { entries: EntrySummary[]; width: nu
 		);
 	}, [preview.document, preview.height, scale]);
 
+	const height = preview.height || 600;
+	const stageStyle = useStageStyle(!!preview.document, height * scale, 600 * scale, width * scale);
+
 	if (!src) {
 		return null;
 	}
 	const titles = new Map(entries.map((entry) => [entry.id, entry]));
-	const height = preview.height || 600;
 
 	return (
 		<div ref={container} className="sg-gallery">
-			<div className="sg-gallery__stage" style={{ width: width * scale, height: height * scale }}>
+			<div className="sg-gallery__stage" style={stageStyle}>
 				{!preview.document && <p className="sg-muted sg-gallery__loading">Vorschau wird geladen …</p>}
 				<LoadingBar active={preview.loading} />
 				{preview.render({
@@ -79,16 +86,24 @@ export function Gallery({ entries, width }: { entries: EntrySummary[]; width: nu
 				{places.map((place, index) => {
 					const entry = titles.get(place.id);
 					return entry ? (
-						<button
+						<div
 							key={place.id}
-							type="button"
 							className={index === 0 ? 'sg-gallery__label sg-gallery__label--first' : 'sg-gallery__label'}
 							style={{ top: place.top * scale - LABEL, height: LABEL }}
-							onClick={() => navigate({ screen: 'element', id: place.id })}
 						>
 							<span className="sg-gallery__title">{entry.title}</span>
-							<span className="sg-gallery__open">Öffnen</span>
-						</button>
+							<button
+								type="button"
+								className="sg-icon-button sg-icon-button--boxed sg-gallery__open"
+								aria-label={`${entry.title} öffnen`}
+								title="Öffnen"
+								onClick={() => navigate({ screen: 'element', id: place.id })}
+							>
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+									<path d="M5 12h14M13 6l6 6-6 6" />
+								</svg>
+							</button>
+						</div>
 					) : null;
 				})}
 			</div>

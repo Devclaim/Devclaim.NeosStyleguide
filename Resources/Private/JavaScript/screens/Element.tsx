@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { previewUrl } from '../api';
 import { isChanged } from '../components/Rail';
+import { useStageStyle } from '../components/stageHeight';
 import { LoadingBar, usePreviewFrame } from '../components/usePreviewFrame';
 import { useSize } from '../components/useWidth';
 import { type Size, viewportSizes, Viewports } from '../components/Viewports';
@@ -105,6 +106,7 @@ export function Element({ id }: { id: string }) {
 	const heightOf = (isPage: boolean, frameScale: number) =>
 		isPage ? Math.max(1, Math.floor(room.height / frameScale)) : preview.height || 240;
 	const height = heightOf(page, scale);
+	const stageStyle = useStageStyle(!!preview.document, height * scale, 240 * scale, width * scale);
 
 	useEffect(() => {
 		data.api
@@ -157,6 +159,27 @@ export function Element({ id }: { id: string }) {
 				<h1>{entry.title}</h1>
 				<span className="sg-header__meta">{level}</span>
 				<span className="sg-header__spacer" />
+				{/* in the header, so the preview stays in place whether an element has use cases or not */}
+				{variants.length > 0 && (
+					<select
+						className="sg-header-select"
+						aria-label="Anwendungsfall"
+						title="Anwendungsfall"
+						value={chosen ? `${chosen.type}:${chosen.id}` : ''}
+						onChange={(event) => {
+							const next = variants.find((candidate) => `${candidate.type}:${candidate.id}` === event.target.value);
+							setVariant(next ? { type: next.type, id: next.id } : null);
+							setChanged({});
+						}}
+					>
+						<option value="">Standard</option>
+						{variants.map((candidate) => (
+							<option key={`${candidate.type}-${candidate.id}`} value={`${candidate.type}:${candidate.id}`}>
+								{candidate.title}
+							</option>
+						))}
+					</select>
+				)}
 				{manifest.features.grid && (
 					<button
 						type="button"
@@ -185,36 +208,8 @@ export function Element({ id }: { id: string }) {
 				/>
 			</header>
 			<div className={page ? 'sg-content sg-content--page' : 'sg-content'}>
-				{variants.length > 0 && (
-					<div className="sg-pills" role="group" aria-label="Anwendungsfall">
-						<button
-							type="button"
-							aria-pressed={!variant}
-							onClick={() => {
-								setVariant(null);
-								setChanged({});
-							}}
-						>
-							Standard
-						</button>
-						{variants.map((candidate) => (
-							<button
-								key={`${candidate.type}-${candidate.id}`}
-								type="button"
-								aria-pressed={chosen === candidate}
-								onClick={() => {
-									setVariant({ type: candidate.type, id: candidate.id });
-									setChanged({});
-								}}
-							>
-								{candidate.title}
-							</button>
-						))}
-					</div>
-				)}
-
 				<div ref={stage} className={page ? 'sg-preview sg-preview--page' : 'sg-preview'}>
-					<div className="sg-preview__stage" style={{ width: width * scale, height: height * scale }}>
+					<div className="sg-preview__stage" style={stageStyle}>
 						<LoadingBar active={preview.loading} />
 						{preview.render({
 							title: entry.title,

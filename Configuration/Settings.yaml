@@ -2,6 +2,10 @@ Devclaim:
   NeosStyleguide:
     # the content dimension of the languages: the sites API names them for the adapter (Classes/Application/Languages.php)
     languageDimension: 'language'
+    theme:
+      # a frontend rendered by Neos (Fusion, CPX): its stylesheets with the @theme blocks of the design tokens, read as
+      # source (Classes/Tokens/Theme.php), e.g. 'Vendor.Shared:Styles': 'resource://Vendor.Shared/Private/Styles/Styles.css'
+      stylesheets: {}
 
 Neos:
   Flow:
