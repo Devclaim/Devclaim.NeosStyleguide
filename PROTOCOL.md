@@ -1,0 +1,262 @@
+# Styleguide protocol, version 2
+
+The interface of the styleguide (this package, a plugin of the Neos UI) knows nothing about the frontend. It talks to an **adapter**: whatever
+renders the website (the SvelteKit frontend of this distribution: `Frontend/src/routes/neos/styleguide`; a classic
+Neos project could implement it in PHP with Fusion or CPX). Three parts:
+
+| Part | Who | What |
+| --- | --- | --- |
+| Neos API | this package | sites, the design token overrides of a site (in the editor's workspace) |
+| Adapter API | the adapter | the entries of the styleguide and the design tokens of the frontend (JSON) |
+| Preview | the adapter | an HTML page per entry, shown in an iframe; a plain page, the interface works on it itself |
+
+All requests come from the browser of a logged-in editor, with the Neos session cookie. The adapter answers `401`
+without a backend session (it can ask the Neos API, which needs the session). Everything is same-origin: the interface,
+the adapter and the preview are served under the host of the Neos backend.
+
+## Where the adapter is
+
+`adapter` of the Neos UI's `frontendConfiguration` `Devclaim.NeosStyleguide` (Configuration/Settings.yaml) is the
+base URL of the adapter API, e.g. `/neos/styleguide/api/v1`.
+Everything else, the preview URLs included, comes from its manifest.
+
+## Adapter API
+
+JSON, `GET` unless noted. Every response that is an object has `"protocol": 2`.
+
+### `GET {adapter}/manifest`
+
+```json
+{
+    "protocol": 2,
+    "name": "SvelteKit",
+    "levels": [{ "id": "atoms", "label": "Atoms", "position": 200 }],
+    "viewports": [{ "id": "md", "label": "Tablet (768)", "width": 768, "height": 1024 }],
+    "preview": "/neos/styleguide/preview?entry={entry}&site={site}",
+    "gallery": "/neos/styleguide/preview?entries={entries}&site={site}",
+    "features": { "grid": true }
+}
+```
+
+- `levels`: the navigation of the elements, in `position` order.
+- `viewports`: the widths the interface offers (in px); "full width" is always there.
+- `preview`: a URL template. The interface replaces `{entry}` and `{site}` and appends `useCase`, `propSet` and
+    `props` (below) as query parameters.
+- `gallery` (optional): a URL template for many entries on one page (below); `{entries}` are ids separated by commas.
+    Without it the interface lists the entries as cards.
+- `features`: what the preview can do beyond the basics (below); missing ones are `false`. `grid`: it draws the page
+    grid of the website while `<html>` has the attribute `data-styleguide-grid`.
+
+### `GET {adapter}/entries`
+
+```json
+{
+    "protocol": 2,
+    "entries": [
+        {
+            "id": "content.Accordion",
+            "title": "Accordion",
+            "level": "organisms",
+            "description": "Expandable items …",
+            "useCases": [{ "id": "closed", "title": "All closed" }],
+            "propSets": [{ "id": "twoColumns", "title": "twoColumns" }],
+            "source": "Frontend/src/lib/content/Accordion.styleguide.yaml",
+            "gallery": true,
+            "page": false
+        }
+    ]
+}
+```
+
+`id` is stable and URL safe (letters, digits, `.`, `-`, `_`); `source` is shown to developers, the interface does not
+read it. `gallery` (optional, default `true`): `false` for an entry that is only shown alone (a whole page). `page`
+(optional, default `false`): a whole page; the interface shows it at the height of a screen, scrolled inside its frame
+like in a browser, so heights in `vh`, sticky and fixed elements work as on the website.
+
+### `GET {adapter}/entries/{id}`
+
+The entry as in the list, plus what the inspector shows:
+
+```json
+{
+    "protocol": 2,
+    "entry": {
+        "id": "ui.Button",
+        "title": "Button",
+        "level": "atoms",
+        "props": [
+            { "name": "html", "value": "Mehr erfahren", "editor": { "type": "text" } },
+            { "name": "variant", "value": "REGULAR", "editor": { "type": "select", "options": [{ "value": "REGULAR", "label": "REGULAR" }] } },
+            { "name": "iconOnly", "value": false, "editor": { "type": "checkbox" } }
+        ],
+        "propSets": [{ "id": "solid", "title": "solid", "props": { "variant": "SOLID" } }],
+        "useCases": [{ "id": "iconOnly", "title": "Icon only", "props": { "html": "", "iconOnly": true } }]
+    }
+}
+```
+
+- `props`: only the props with an editor; others (lists, objects) stay as they are.
+- `editor.type`: `text`, `textarea`, `number`, `checkbox` or `select` (with `options`, `value` a string; `""` stands
+    for "none").
+- `propSets` and `useCases` change props; the preview applies them itself (below), the interface only needs their
+    `props` to show the changed values.
+
+`404` for an unknown id.
+
+### `GET {adapter}/tokens`
+
+The design tokens of the frontend, with their defaults (not the values of a site: those come from the Neos API):
+
+```json
+{
+    "protocol": 2,
+    "kinds": [{ "id": "colors", "label": "Farben" }],
+    "groups": [{ "id": "semantic-colors", "label": "Semantic colors", "description": "the only colors components use", "kind": "colors" }],
+    "tokens": [
+        {
+            "name": "--color-brand",
+            "value": "var(--color-sd-50)",
+            "group": "semantic-colors",
+            "type": "color",
+            "description": "primary actions (buttons)",
+            "editable": true
+        }
+    ]
+}
+```
+
+- `kinds` (optional): the navigation of the tokens, in this order (colors, typography …); every group names its
+    `kind`. Without kinds the interface lists the groups.
+- `type`: `color`, `font`, `size` (lengths), `shadow`, `ratio`, `breakpoint` or `other`; the interface picks the
+    editor by it.
+- `editable`: `false` for tokens a site cannot change (breakpoints: fixed at build time).
+- `value` may refer to other tokens (`var(--color-sd-50)`).
+
+### `POST {adapter}/tokens/validate`
+
+Checks overrides before the interface saves them, with the rules the adapter applies when it renders them.
+
+Request: `{ "overrides": { "--color-brand": "#e5007d", "--color-nope": "red" } }`
+
+```json
+{
+    "protocol": 2,
+    "valid": { "--color-brand": "#e5007d" },
+    "invalid": [{ "name": "--color-nope", "value": "red", "reason": "unknown token" }]
+}
+```
+
+## Preview
+
+The URL of the manifest's `preview` template, plus:
+
+| Parameter | What |
+| --- | --- |
+| `entry` | the id of the entry |
+| `site` | the site (node name, from the Neos API); its saved token overrides apply |
+| `useCase`, `propSet` | ids from the entry; the preview applies their props |
+| `props` | JSON object of the props changed in the inspector, applied last |
+
+Order of the props: defaults, prop set, use case, `props`. The page renders the entry as the website would, in the
+site's theme, without anything of the interface around it.
+
+### Gallery
+
+The URL of the manifest's `gallery` template: the entries with their defaults on one page, in the given order, each in
+an element with `data-styleguide-entry="<id>"`, all inside `data-styleguide-root`. Unknown ids are left out. The
+interface shows it at the width of a viewport (scaled into its room), reserves room above each entry (a style in the
+head: a `margin-top` on `[data-styleguide-entry]`) and puts its own labels there; the page needs nothing for that.
+
+### What the interface does with it
+
+The previews are on the origin of the Neos backend, like the interface, so the interface works on their documents
+directly. An adapter writes no script for the styleguide; it only has to render a page that
+
+- marks what it shows with the attribute `data-styleguide-root` (else the interface takes the `<body>`),
+- uses the design tokens as CSS custom properties, so a value set on `:root` restyles it,
+- draws the page grid for `data-styleguide-grid` on `<html>`, if its manifest says `features.grid`.
+
+The interface then
+
+| Does | How |
+| --- | --- |
+| shows the draft tokens | a `<style data-styleguide-draft>:root{…}</style>` at the end of the `<head>`, after the page's own styles, updated on every change (only names `--…` and values that cannot leave the declaration) |
+| makes the uploaded fonts available | a `<style data-styleguide-fonts>` with their `@font-face` rules (Neos API `fonts`, below), so a draft can name any of them |
+| sizes the iframe | the bottom of the root element, observed with a `ResizeObserver` |
+| lists the tokens an entry uses | the `var(--…)` of every style rule of the page that matches the root or an element in it |
+| shows the page grid | sets or removes `data-styleguide-grid` on `<html>` |
+
+A new preview URL loads in a hidden iframe and replaces the shown one once it has loaded and has the draft, so a page
+of the adapter may take its time; it should not change its height long after it has loaded.
+
+## Neos API
+
+Served by this package, `Devclaim.NeosStyleguide` routes:
+
+- `GET /api/styleguide/v1/sites`: `{ "sites": [{ "key", "title", "languages", "designTokens" }] }`, the
+    token overrides of each site in the editor's workspace as `--name: value;` lines. For the adapter: the preview
+    renders an entry in the theme of the site, unpublished changes included.
+- `GET /api/styleguide/v1/fonts`: `{ "families": ["Inter"], "css": "@font-face{…}" }`, the fonts editors
+    uploaded (Devclaim.NeosStyleguide `FontLibrary`, asset collection "Schriften"). For the interface: the font editor and
+    the previews. Fonts are Neos', not the adapter's: the pages of the website print the same rules (the SvelteKit
+    frontend from `site.fonts` of the headless API, Fusion with `NeosStyleguide.Fonts.css()`); previews need nothing.
+
+The interface saves the overrides like an inline edit of the Neos UI (a change of the property of the site node into the
+editor's workspace); publishing is Neos' own.
+
+## Serving
+
+The interface, the adapter and the previews share the origin of the Neos backend: the interface reads and changes the
+documents of the previews, which a browser only allows on the same origin. The adapter's paths may be anywhere on that
+host. Behind a web server they go to the adapter before any rule that sends `/neos` or `/api` to Neos (the SvelteKit
+adapter: README "Production"). Its answers are for one editor: `Cache-Control: private, no-store`, never in a shared
+cache.
+
+## Writing an adapter
+
+Another frontend (a classic Neos site with Fusion or CPX, another JavaScript framework) keeps the interface and writes
+an adapter. In the order worth building, each step shows more in the styleguide:
+
+1. **Manifest and entries** (`manifest`, `entries`, `entries/{id}`). Where the entries come from is the adapter's
+    business: the SvelteKit adapter reads a `*.styleguide.yaml` next to each component; a Fusion adapter could read
+    the same files next to its prototypes, or annotations of the prototypes themselves. Levels and viewports are free
+    to choose.
+2. **The preview.** A page per entry that renders the component with its props (defaults, prop set, use case,
+    `props`) in the theme of the site, inside `data-styleguide-root`, and nothing else. No script for the styleguide.
+    With `gallery` in the manifest the elements screen shows every entry in one page, without it a card per entry.
+3. **Tokens** (`tokens`, `tokens/validate`). The CSS custom properties the CSS of the site defines, with their defaults;
+    the interface edits only these. `validate` applies exactly the rules the website applies when it renders the
+    overrides of a site (4.), or the styleguide saves values the website leaves out.
+4. **The overrides in the pages.** Not part of the protocol, but a change of a token is only seen with it: the
+    website renders the property `designTokens` of the site node (`--name: value;` per line) into a `<style>` after its
+    stylesheet, line by line checked (the SvelteKit adapter: `Frontend/src/lib/design/tokens.server.ts`). The preview
+    does the same with the tokens of the site in the editor's workspace.
+5. **Login.** Every answer `401` without the Neos backend session. An adapter outside of Neos asks the Neos API with
+    the editor's cookie (the answer is the check); an adapter inside Neos (a Flow controller) gets the session when its
+    controller is matched by a request pattern of the provider `Neos.Neos:Backend` (`Configuration/Settings.yaml` of
+    this package does that for `ApiController`), and reads the site node in the editor's workspace itself.
+6. **Point the interface to it:** `adapter` of the `frontendConfiguration` `Devclaim.NeosStyleguide` of the Neos UI
+    (`Configuration/Settings.yaml`), then check it.
+
+A PHP adapter for Fusion would be a Flow package with a controller for the adapter API and one for the preview, which
+renders the Fusion prototype of an entry with the props and the tokens of the site in the editor's workspace (a Fusion
+view around it, the same `<head>` as the website). The interface does not change.
+
+## Checking an adapter
+
+`Benchmarks/browser/styleguide-protocol.mjs` checks an adapter against this protocol (the API, and a preview: same
+origin, root element, tokens as custom properties, the grid):
+`node browser/styleguide-protocol.mjs <origin> [<adapter base URL>]` inside the DDEV web container.
+
+`Benchmarks/browser/styleguide.mjs` checks the whole styleguide in the content module with the adapter configured
+there: open it, search, change a token (the draft in the previews and the canvas, an invalid value, saving into the
+workspace), and discard the change with the Neos UI.
+
+## Versioning
+
+A change an existing interface or adapter cannot handle (a removed or renamed field, a changed meaning) raises
+`protocol`. New optional fields do not: both sides ignore what they do not know.
+
+Version 2 removed the messages between the interface and the preview of version 1 (`styleguide:tokens`, `…:grid`,
+`…:ready`, `…:size`, `…:usedTokens`): the interface does all of it on the document itself, so an adapter needs no
+script.

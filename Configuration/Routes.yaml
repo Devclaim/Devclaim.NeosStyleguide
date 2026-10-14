@@ -1,0 +1,19 @@
+-
+  name: 'Styleguide API: sites'
+  uriPattern: 'api/styleguide/v1/sites'
+  httpMethods: ['GET']
+  defaults:
+    '@package': 'Devclaim.NeosStyleguide'
+    '@controller': 'Api'
+    '@action': 'sites'
+    '@format': 'json'
+
+-
+  name: 'Styleguide API: fonts'
+  uriPattern: 'api/styleguide/v1/fonts'
+  httpMethods: ['GET']
+  defaults:
+    '@package': 'Devclaim.NeosStyleguide'
+    '@controller': 'Api'
+    '@action': 'fonts'
+    '@format': 'json'

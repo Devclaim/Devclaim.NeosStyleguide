@@ -1,0 +1,13 @@
+privilegeTargets:
+
+  'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
+
+    'Devclaim.NeosStyleguide:Api':
+      matcher: 'method(Devclaim\NeosStyleguide\Controller\ApiController->(.*)Action())'
+
+roles:
+  'Neos.Neos:Editor':
+    privileges:
+      -
+        privilegeTarget: 'Devclaim.NeosStyleguide:Api'
+        permission: GRANT

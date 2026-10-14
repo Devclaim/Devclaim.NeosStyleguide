@@ -1,0 +1,37 @@
+Devclaim:
+  NeosStyleguide:
+    # the content dimension of the languages: the sites API names them for the adapter (Classes/Application/Languages.php)
+    languageDimension: 'language'
+
+Neos:
+  Flow:
+    mvc:
+      routes:
+        'Devclaim.NeosStyleguide':
+          position: 'before Neos.Neos'
+    security:
+      authentication:
+        providers:
+          'Neos.Neos:Backend':
+            requestPatterns:
+              # the API reads the sites in the editor's workspace with the Neos backend session
+              'Devclaim.NeosStyleguide:Controllers':
+                pattern: 'ControllerObjectName'
+                patternOptions:
+                  controllerObjectNamePattern: 'Devclaim\NeosStyleguide\Controller\.*'
+  Neos:
+    Ui:
+      # the styleguide in the content module: the button in the top bar and the view below it (neos-ui/)
+      resources:
+        javascript:
+          '@devclaim/neos-styleguide':
+            resource: 'resource://Devclaim.NeosStyleguide/Public/NeosUi/Plugin.js'
+        stylesheets:
+          '@devclaim/neos-styleguide':
+            resource: 'resource://Devclaim.NeosStyleguide/Public/NeosUi/Plugin.css'
+      frontendConfiguration:
+        'Devclaim.NeosStyleguide':
+          # the base URL of the adapter API (PROTOCOL.md): the frontend that renders the entries and knows the tokens
+          adapter: '/neos/styleguide/api/v1'
+          # the fonts editors uploaded (ApiController fontsAction): from Neos, independent of the adapter
+          fonts: '/api/styleguide/v1/fonts'

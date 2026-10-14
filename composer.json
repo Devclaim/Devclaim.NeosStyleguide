@@ -1,0 +1,23 @@
+{
+	"name": "devclaim/neos-styleguide",
+	"type": "neos-package",
+	"description": "A styleguide in the Neos content module: the components of the website with their use cases, design tokens and fonts per site, for any frontend through an adapter",
+	"license": "GPL-3.0-or-later",
+	"require": {
+		"neos/neos": "^9.2@beta",
+		"neos/neos-ui": "^9.2@beta",
+		"neos/media": "^9.2@beta",
+		"packagefactory/opgm-neosadapter": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"Devclaim\\NeosStyleguide\\": "Classes/",
+			"Devclaim\\NeosStyleguide\\NodeTypes\\": "NodeTypes"
+		}
+	},
+	"extra": {
+		"neos": {
+			"package-key": "Devclaim.NeosStyleguide"
+		}
+	}
+}

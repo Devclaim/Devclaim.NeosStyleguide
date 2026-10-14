@@ -1,0 +1,11 @@
+Devclaim:
+  NeosStyleguide:
+    fonts:
+      # the asset collection of the media module with the font files editors upload (Classes/Fonts/FontLibrary.php)
+      assetCollection: 'Schriften'
+
+Neos:
+  Fusion:
+    defaultContext:
+      # a site rendered by Fusion or CPX prints the @font-face rules with NeosStyleguide.Fonts.css()
+      'NeosStyleguide.Fonts': 'Devclaim\NeosStyleguide\Fonts\FontsHelper'

@@ -1,0 +1,22 @@
+{
+	"name": "@devclaim/neos-styleguide",
+	"license": "GPL-3.0-or-later",
+	"private": true,
+	"scripts": {
+		"build": "node esbuild.mjs",
+		"watch": "node esbuild.mjs --watch",
+		"check": "tsc --noEmit -p ."
+	},
+	"devDependencies": {
+		"@neos-project/neos-ui-extensibility": "~9.1",
+		"@neos-project/react-ui-components": "~8.3.0",
+		"@types/react": "^17.0.0",
+		"@types/react-dom": "^17.0.0",
+		"esbuild": "~0.27.2",
+		"typescript": "^5.4.2"
+	},
+	"resolutions": {
+		"@types/react": "^17.0.0"
+	},
+	"packageManager": "yarn@3.2.0"
+}

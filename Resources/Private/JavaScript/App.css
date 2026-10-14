@@ -1,0 +1,1104 @@
+/*
+ * The styleguide in the look of the Neos UI, calm: dark surfaces without many lines, Noto Sans, the Neos blue for the
+ * selection, orange for what changed. The previews of the website sit on light sheets. Every rule is scoped by the id
+ * of a container (the view over the content canvas, the editor in the inspector): the stylesheets of the Neos UI reset
+ * elements (".neos div"), which wins over a class alone.
+ */
+
+#neos-styleguide-view {
+	/* top: StyleguideView.tsx; below the dropdowns of the Neos top bar (z-index 40) */
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 30;
+	background: #161616;
+	color: #e8e8e8;
+	font-family: 'Noto Sans', system-ui, sans-serif;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+/* "Styleguide" in the top bar (ToolbarButton.tsx), like its other buttons */
+#neos-styleguide-toggle {
+	display: flex;
+	height: 100%;
+}
+
+#neos-styleguide-toggle button {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 16px;
+	border: 0;
+	border-left: 1px solid #3f3f3f;
+	background: transparent;
+	color: #fff;
+	font-family: 'Noto Sans', system-ui, sans-serif;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+#neos-styleguide-toggle button:hover {
+	color: #00adee;
+}
+
+#neos-styleguide-toggle button[aria-pressed='true'] {
+	background: #00adee;
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle),
+:is(#neos-styleguide-view, #neos-styleguide-toggle) *,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) *::before,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) *::after {
+	box-sizing: border-box;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) :where(button:not([class*='_btn'])) {
+	height: auto;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-muted {
+	color: #8c8c8c;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-message {
+	padding: 24px 28px;
+	color: #8c8c8c;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-dot {
+	flex-shrink: 0;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #ff8700;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-swatch {
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-swatch--small {
+	width: 16px;
+	height: 16px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-swatch--tiny {
+	width: 10px;
+	height: 10px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-input {
+	width: 100%;
+	min-width: 0;
+	height: 36px;
+	padding: 0 10px;
+	border: 0;
+	border-radius: 4px;
+	background: #3f3f3f;
+	color: #fff;
+	font: inherit;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) textarea.sg-input {
+	height: auto;
+	padding: 8px 10px;
+	resize: vertical;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-input--mono {
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-input:focus {
+	outline: 2px solid #00adee;
+	outline-offset: -2px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-link {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #00adee;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-link:hover {
+	color: #5fd0ff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-icon-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: #9a9a9a;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-icon-button:hover {
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-icon-button--boxed {
+	width: 34px;
+	height: 34px;
+	border-radius: 6px;
+	background: #1e1e1e;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-icon-button--boxed[aria-pressed='true'] {
+	background: #333;
+	color: #fff;
+}
+
+/* the frame: navigation and screen */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-app {
+	display: flex;
+	height: 100%;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail {
+	display: flex;
+	flex-direction: column;
+	/* both columns as wide as the sidebars of the Neos UI */
+	flex: 0 0 320px;
+	width: 320px;
+	min-height: 0;
+	background: #1e1e1e;
+	border-right: 1px solid #2a2a2a;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__switch {
+	display: flex;
+	margin: 14px 14px 10px;
+	padding: 3px;
+	border-radius: 6px;
+	background: #161616;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__switch button {
+	flex: 1;
+	height: 30px;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: #9a9a9a;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__switch button[aria-pressed='true'] {
+	background: #333;
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__hint {
+	margin: 0;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__search {
+	flex-shrink: 0;
+	width: auto;
+	height: 32px;
+	margin: 0 14px 8px;
+	background: #262626;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__results {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__results + .sg-rail__results {
+	margin-top: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__heading {
+	display: flex;
+	gap: 6px;
+	margin: 6px 10px 4px;
+	color: #8c8c8c;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__heading span {
+	color: #6f6f6f;
+	font-weight: 400;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__icon {
+	flex-shrink: 0;
+	width: 10px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__meta {
+	flex-shrink: 0;
+	color: #6f6f6f;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__empty {
+	margin: 8px 10px;
+	color: #8c8c8c;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__list {
+	flex-grow: 1;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: 4px 8px 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 10px;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: #cfcfcf;
+	text-align: left;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__item:hover {
+	background: #262626;
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__item--active,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__item--active:hover {
+	background: rgba(0, 173, 238, 0.14);
+	color: #5fd0ff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__label {
+	flex-grow: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__count {
+	color: #6f6f6f;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__item--active .sg-rail__count {
+	color: inherit;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__entries {
+	display: flex;
+	flex-direction: column;
+	margin: 2px 0 6px 12px;
+	padding-left: 8px;
+	border-left: 1px solid #2f2f2f;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__item--nested {
+	padding: 6px 10px;
+	color: #a8a8a8;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 10px 10px 14px;
+	border-top: 1px solid #2a2a2a;
+	color: #8c8c8c;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-main {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow-y: auto;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	height: 56px;
+	padding: 0 28px;
+	background: #161616;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header h1 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header__meta {
+	color: #7a7a7a;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header__spacer {
+	flex-grow: 1;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-content {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	padding: 4px 28px 40px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-segmented {
+	display: flex;
+	gap: 2px;
+	padding: 3px;
+	border-radius: 6px;
+	background: #1e1e1e;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-segmented button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: #9a9a9a;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-segmented button[aria-pressed='true'] {
+	background: #333;
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #9a9a9a;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-check input {
+	width: 16px;
+	height: 16px;
+	accent-color: #00adee;
+}
+
+/* tokens */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-section__head {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	margin-bottom: 8px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-section__head h2 {
+	margin: 0;
+	color: #e8e8e8;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-section__note {
+	margin: 0 0 8px;
+	color: #7a7a7a;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rows {
+	display: flex;
+	flex-direction: column;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rows--columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	column-gap: 28px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	min-height: 40px;
+	margin: 0;
+	padding: 4px 8px;
+	border: 0;
+	border-bottom: 1px solid #242424;
+	border-radius: 0;
+	background: transparent;
+	text-align: left;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row:hover {
+	background: #1c1c1c;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row--selected,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row--selected:hover {
+	background: rgba(0, 173, 238, 0.1);
+	box-shadow: inset 2px 0 0 #00adee;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__sample {
+	display: flex;
+	align-items: center;
+	flex: 0 0 140px;
+	min-height: 32px;
+	overflow: hidden;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__value {
+	flex-shrink: 0;
+	line-height: 20px;
+	max-width: 45%;
+	margin-left: auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: #7a7a7a;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__value--changed {
+	color: #ffb366;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__invalid {
+	padding: 1px 6px;
+	border-radius: 3px;
+	background: #ff460d;
+	color: #fff;
+	font-size: 11px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-sample-font,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-sample-text {
+	padding: 2px 8px;
+	border-radius: 3px;
+	background: #fbfaf7;
+	color: #141414;
+	white-space: nowrap;
+	line-height: 1.2;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-sample-font {
+	font-size: 16px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-sample-shadow {
+	display: block;
+	width: 56px;
+	height: 28px;
+	margin: 6px 10px;
+	border-radius: 3px;
+	background: #fbfaf7;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-sample-ratio {
+	display: block;
+	height: 32px;
+	max-width: 100%;
+	border-radius: 2px;
+	background: #3a7ea1;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-sample-bar {
+	display: block;
+	height: 8px;
+	border-radius: 2px;
+	background: #3a7ea1;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scales {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__name {
+	flex: 0 0 48px;
+	color: #7a7a7a;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__steps {
+	display: grid;
+	flex-grow: 1;
+	height: 22px;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__step {
+	height: 100%;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__step--changed {
+	box-shadow: inset 0 -3px 0 #ff8700;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__step--selected {
+	outline: 2px solid #00adee;
+	outline-offset: -2px;
+}
+
+/* elements: the gallery on a light sheet (Gallery.tsx) */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery {
+	overflow: hidden;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__stage {
+	position: relative;
+	margin: 0 auto;
+	border-radius: 6px;
+	overflow: hidden;
+	background: #fbfaf7;
+}
+
+/* the stages follow the size of their preview smoothly; the old page fades out over the new one */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-gallery__stage, .sg-preview__stage) {
+	transition:
+		height 220ms ease,
+		width 220ms ease;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-frame--leaving {
+	animation: sg-fade-out 180ms ease forwards;
+}
+
+@keyframes sg-fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
+/* while the next page loads: a thin running bar at the top, only after a moment (fast loads show nothing) */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-loading {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	z-index: 2;
+	height: 3px;
+	overflow: hidden;
+	opacity: 0;
+	animation: sg-loading-show 120ms ease 150ms forwards;
+	pointer-events: none;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-loading::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 40%;
+	background: #00adee;
+	animation: sg-loading-run 1s ease-in-out infinite;
+}
+
+@keyframes sg-loading-show {
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes sg-loading-run {
+	from {
+		left: -40%;
+	}
+	to {
+		left: 100%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-gallery__stage, .sg-preview__stage) {
+		transition: none;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-frame--leaving {
+		animation-duration: 1ms;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-loading::after {
+		left: 0;
+		width: 100%;
+		animation: none;
+	}
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__frame,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-preview__frame {
+	display: block;
+	border: 0;
+	background: #fbfaf7;
+	transform-origin: 0 0;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__loading {
+	position: absolute;
+	inset: 20px;
+	margin: 0;
+	color: #6b6b6b;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label {
+	position: absolute;
+	left: 0;
+	right: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 0 20px;
+	border: 0;
+	border-top: 1px solid #e6e2d9;
+	border-radius: 0;
+	background: transparent;
+	color: #3a3a3a;
+	font-size: 12px;
+	text-align: left;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label--first {
+	border-top: 0;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__title {
+	font-weight: 600;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__open {
+	margin-left: auto;
+	color: #0077a8;
+	opacity: 0;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label:hover .sg-gallery__open,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__label:focus-visible .sg-gallery__open {
+	opacity: 1;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 8px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	width: 100%;
+	padding: 14px;
+	border: 0;
+	border-radius: 6px;
+	background: #1e1e1e;
+	text-align: left;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-card:hover {
+	background: #262626;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-card__title {
+	font-weight: 600;
+}
+
+/* one element */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-pills button {
+	height: 30px;
+	padding: 0 12px;
+	border: 1px solid #333;
+	border-radius: 999px;
+	background: transparent;
+	color: #cfcfcf;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-pills button[aria-pressed='true'] {
+	border-color: #e8e8e8;
+	background: #e8e8e8;
+	color: #141414;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-preview {
+	overflow: hidden;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-preview__stage {
+	/* the next preview loads on top of the shown one, invisible (usePreviewFrame.tsx) */
+	position: relative;
+	margin: 0 auto;
+	border-radius: 6px;
+	overflow: hidden;
+	background: #fbfaf7;
+}
+
+/* a whole page: the preview fills the room below the header and scrolls inside */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-content--page {
+	height: calc(100% - 56px);
+	padding-bottom: 28px;
+	gap: 20px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-preview--page {
+	flex: 1 1 0;
+	min-height: 0;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 28px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel-title {
+	margin: 0 0 12px;
+	color: #9a9a9a;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-props {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-prop {
+	display: grid;
+	grid-template-columns: 120px minmax(0, 1fr);
+	align-items: center;
+	gap: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-prop label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: #9a9a9a;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-prop .sg-input {
+	background: #262626;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-prop input[type='checkbox'] {
+	width: 16px;
+	height: 16px;
+	accent-color: #00adee;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 28px;
+	padding: 0 10px;
+	border: 0;
+	border-radius: 4px;
+	background: #222;
+	color: #e8e8e8;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chip:hover {
+	background: #2b2b2b;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chip[aria-pressed='true'] {
+	background: rgba(0, 173, 238, 0.18);
+	color: #5fd0ff;
+}
+
+/* the design panel, where the inspector of Neos would be (DesignPanel.tsx) */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel {
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 320px;
+	width: 320px;
+	overflow: hidden;
+	min-height: 0;
+	background: #222;
+	border-left: 1px solid #3f3f3f;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 16px 16px 8px;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__head h2 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__body {
+	flex-grow: 1;
+	min-width: 0;
+	overflow-y: auto;
+	padding: 8px 16px 16px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__foot {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px 16px;
+	border-top: 1px solid #333;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__status {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	color: #ff8e6b;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__message {
+	color: #8c8c8c;
+	overflow-wrap: anywhere;
+}
+
+/* the editor of a token, all tokens (in the design panel) */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__back {
+	align-self: flex-start;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #00adee;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__name {
+	font-size: 15px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__value {
+	display: flex;
+	gap: 8px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__color {
+	flex: 0 0 36px;
+	height: 36px;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: none;
+	cursor: pointer;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__color::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__color::-webkit-color-swatch {
+	border: 0;
+	border-radius: 4px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__palette,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__scales {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__palette-row {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(0, 1fr);
+	gap: 3px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__palette-step {
+	height: 18px;
+	padding: 0;
+	border: 0;
+	border-radius: 2px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__palette-step[aria-pressed='true'] {
+	outline: 2px solid #00adee;
+	outline-offset: 1px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__error {
+	margin: 0;
+	color: #ff8e6b;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	color: #8c8c8c;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__links {
+	display: flex;
+	gap: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__toggle svg {
+	flex-shrink: 0;
+	color: #8c8c8c;
+	transition: transform 0.15s;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__toggle[aria-expanded='true'] svg {
+	transform: rotate(90deg);
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 0;
+	border: 0;
+	background: none;
+	color: #e8e8e8;
+	font-weight: 600;
+	text-align: left;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__kind + .sg-browser__kind {
+	border-top: 1px solid #333;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__rows {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 8px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	min-height: 32px;
+	padding: 4px 6px;
+	border: 0;
+	border-radius: 3px;
+	background: transparent;
+	text-align: left;
+	font-size: 13px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__row:hover {
+	background: #2b2b2b;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__type {
+	flex: 0 0 16px;
+	color: #8c8c8c;
+	font-size: 11px;
+	text-align: center;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-browser__value {
+	flex-shrink: 0;
+	line-height: 20px;
+	max-width: 40%;
+	margin-left: auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: #7a7a7a;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+	font-size: 11px;
+}
