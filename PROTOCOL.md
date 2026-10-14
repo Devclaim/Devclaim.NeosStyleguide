@@ -208,8 +208,8 @@ editor's workspace); publishing is Neos' own.
 
 The interface, the adapter and the previews share the origin of the Neos backend: the interface reads and changes the
 documents of the previews, which a browser only allows on the same origin. The adapter's paths may be anywhere on that
-host. Behind a web server they go to the adapter before any rule that sends `/neos` or `/api` to Neos (the SvelteKit
-adapter: README "Production"). Its answers are for one editor: `Cache-Control: private, no-store`, never in a shared
+host. Behind a web server they go to the adapter before any rule that sends `/neos` or `/api` to Neos (see the README
+of the adapter). Its answers are for one editor: `Cache-Control: private, no-store`, never in a shared
 cache.
 
 ## Writing an adapter
