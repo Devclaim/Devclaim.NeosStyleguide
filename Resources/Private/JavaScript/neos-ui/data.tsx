@@ -45,7 +45,12 @@ function load(): Promise<Loaded> {
 	}
 	const current = api;
 	loading ??= Promise.all([current.manifest(), current.entries(), current.tokens(), loadFonts()]).then(
-		([manifest, entries, tokens, fonts]) => ({ manifest, entries, tokens, fonts })
+		([manifest, entries, tokens, fonts]) => ({ manifest, entries, tokens, fonts }),
+		(error: unknown) => {
+			// not kept: opening the styleguide again tries again (e.g. once the frontend runs)
+			loading = null;
+			throw error;
+		}
 	);
 	return loading;
 }
