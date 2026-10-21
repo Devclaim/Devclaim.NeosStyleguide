@@ -118,11 +118,29 @@ The design tokens of the frontend, with their defaults (not the values of a site
     "tokens": [
         {
             "name": "--color-brand",
-            "value": "var(--color-sd-50)",
+            "value": "light-dark(var(--color-brand-light), var(--color-brand-dark))",
             "group": "semantic-colors",
             "type": "color",
             "description": "primary actions (buttons)",
-            "editable": true
+            "editable": true,
+            "layer": "semantic",
+            "variants": [
+                { "id": "light", "token": "--color-brand-light" },
+                { "id": "dark", "token": "--color-brand-dark" }
+            ],
+            "pointsAt": ["base-colors", "color-scales"]
+        },
+        {
+            "name": "--color-brand-light",
+            "value": "var(--color-sd-70)",
+            "group": "semantic-colors-light",
+            "type": "color",
+            "description": "",
+            "editable": true,
+            "layer": "semantic",
+            "variantOf": "--color-brand",
+            "variant": "light",
+            "pointsAt": ["base-colors", "color-scales"]
         }
     ]
 }
@@ -134,6 +152,30 @@ The design tokens of the frontend, with their defaults (not the values of a site
     editor by it.
 - `editable`: `false` for tokens a site cannot change (breakpoints: fixed at build time).
 - `value` may refer to other tokens (`var(--color-sd-50)`).
+- `layer`, `variants`, `variantOf`, `variant`, `pointsAt` (optional, below): what the editor changes, and with what.
+
+#### Layers and variants
+
+Two layers, so an editor restyles the site without touching the design:
+
+- **Design tokens** (`layer: "design"`): the raw values of the design, the palette and the scales (`--color-sd-70`,
+    `--spacing-16`). Nothing of the website uses them directly.
+- **Semantic tokens** (`layer: "semantic"`): what the website uses (`--color-brand`, `--spacing-card`); each points at
+    design tokens (`var(--color-sd-70)`), the editor changes where it points.
+
+A semantic token may have a value per **variant**: `light` and `dark` (the color scheme), or `base`, `md`, `lg`, `xl`
+(from that width; a width without own value takes the one of the smaller width). Then `variants` lists the tokens that
+hold them, in that order, and each of those names the token in `variantOf` and its variant in `variant`. The editor
+changes the variants; a value for the token itself would set one value for all variants (and does nothing for a shadow,
+whose utility Tailwind writes with the value of the token).
+
+`pointsAt`: the groups (ids) whose design tokens a semantic token may point at, e.g. the color groups for a color, the
+spacing scale for a spacing. Without layers (`layer` missing) the interface shows the tokens by group as before.
+
+The SvelteKit adapter reads all of it from the conventions of the stylesheets: a group whose label starts with
+"Semantic" holds semantic tokens, a semantic token named like another one plus `-light`, `-dark`, `-base`, `-md`, `-lg`
+or `-xl` is its variant, and a semantic token points at the design groups of its namespace (`--color-`, `--spacing-`,
+`--radius-`, `--shadow-`, `--font-`, `--text-size-` …).
 
 ### `POST {adapter}/tokens/validate`
 
@@ -228,7 +270,8 @@ an adapter. In the order worth building, each step shows more in the styleguide:
     `props`) in the theme of the site, inside `data-styleguide-root`, and nothing else. No script for the styleguide.
     With `gallery` in the manifest the elements screen shows every entry in one page, without it a card per entry.
 3. **Tokens** (`tokens`, `tokens/validate`). The CSS custom properties the CSS of the site defines, with their defaults;
-    the interface edits only these. `validate` applies exactly the rules the website applies when it renders the
+    the interface edits only these. With layers and variants ("Layers and variants") the editor works on the semantic
+    tokens. `validate` applies exactly the rules the website applies when it renders the
     overrides of a site (4.), or the styleguide saves values the website leaves out.
 4. **The overrides in the pages.** Not part of the protocol, but a change of a token is only seen with it: the
     website renders the property `designTokens` of the site node (`--name: value;` per line) into a `<style>` after its
