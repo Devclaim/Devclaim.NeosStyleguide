@@ -1,8 +1,8 @@
 /*
  * The styleguide in the look of the Neos UI, calm: dark surfaces without many lines, Noto Sans, the Neos blue for the
- * selection, orange for what changed. The previews of the website sit on light sheets. Every rule is scoped by the id
- * of a container (the view over the content canvas, the editor in the inspector): the stylesheets of the Neos UI reset
- * elements (".neos div"), which wins over a class alone.
+ * selection, orange for what is not published yet, violet for an own value of the site. The previews of the website
+ * sit on light sheets. Every rule is scoped by the id of a container (the view over the content canvas, the editor in
+ * the inspector): the stylesheets of the Neos UI reset elements (".neos div"), which wins over a class alone.
  */
 
 #neos-styleguide-view {
@@ -516,7 +516,11 @@
 	font-size: 12px;
 }
 
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__value--changed {
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__value--own {
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__value--unpublished {
 	color: #ffb366;
 }
 
@@ -599,8 +603,12 @@
 	border-radius: 0;
 }
 
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__step--changed {
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__step--unpublished {
 	box-shadow: inset 0 -3px 0 #ff8700;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__step--own {
+	box-shadow: inset 0 -3px 0 #a78bfa;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-scale__step--selected {
@@ -870,6 +878,7 @@
 	border: 0;
 	border-radius: 4px;
 	background: #222;
+	box-shadow: inset 0 0 0 1px #3a3a3a;
 	color: #e8e8e8;
 	font-size: 12px;
 }
@@ -946,12 +955,22 @@
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__back {
+	display: inline-flex;
 	align-self: flex-start;
-	padding: 0;
+	align-items: center;
+	gap: 4px;
+	height: 28px;
+	padding: 0 10px 0 6px;
 	border: 0;
-	background: none;
-	color: #00adee;
+	border-radius: 4px;
+	background: #2b2b2b;
+	color: #cfcfcf;
 	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__back:hover {
+	background: #383838;
+	color: #fff;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__name {
@@ -1110,4 +1129,330 @@
 	color: #7a7a7a;
 	font-family: 'Noto Sans Mono', ui-monospace, monospace;
 	font-size: 11px;
+}
+
+/* layers and variants of the tokens (PROTOCOL.md): the layers as quiet headings, like the other headings */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__layer {
+	margin: 14px 10px 4px;
+	color: #8c8c8c;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__layer--design {
+	margin-top: 22px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header__layer {
+	color: #8c8c8c;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-layer-note {
+	margin: 0;
+	padding: 10px 14px;
+	border-radius: 6px;
+	background: #1e1e1e;
+	color: #9a9a9a;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variants {
+	--sg-variant-width: 92px;
+	--sg-variant-gap: 8px;
+	display: flex;
+	flex-shrink: 0;
+	gap: var(--sg-variant-gap);
+	margin-left: auto;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variants--single {
+	align-items: center;
+	gap: 6px;
+	overflow: hidden;
+	color: #cfcfcf;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variant__text,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-slot__text {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__token {
+	color: #7a7a7a;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+	font-size: 11px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variant {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	width: var(--sg-variant-width);
+	overflow: hidden;
+	color: #cfcfcf;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variants--head .sg-variant {
+	color: #7a7a7a;
+	font-family: inherit;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variant--inherited {
+	color: #6f6f6f;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variant--own {
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-variant--unpublished {
+	color: #ffb366;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-sample-radius {
+	display: block;
+	width: 28px;
+	height: 28px;
+	margin: 2px 0 0 4px;
+	border-top: 2px solid #cfcfcf;
+	border-left: 2px solid #cfcfcf;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__layer {
+	color: #8c8c8c;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__label {
+	margin-bottom: 6px;
+	color: #8c8c8c;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-slots {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 6px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-slot {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	padding: 8px 10px;
+	border: 0;
+	border-radius: 4px;
+	background: #2b2b2b;
+	box-shadow: inset 0 0 0 1px #3a3a3a;
+	text-align: left;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-slot[aria-pressed='true'] {
+	background: rgba(0, 173, 238, 0.12);
+	box-shadow: inset 0 0 0 2px #00adee;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-slot__label {
+	color: #8c8c8c;
+	font-size: 11px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-slot__value {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	overflow: hidden;
+	color: #fff;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-slot__value--inherited {
+	color: #7a7a7a;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-options {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	max-height: 280px;
+	overflow-y: auto;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-option {
+	/* in a scrolling list: as high as its sample, never squeezed */
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	min-height: 34px;
+	padding: 4px 8px;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	text-align: left;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-option:hover {
+	background: #2b2b2b;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-option[aria-pressed='true'] {
+	background: rgba(0, 173, 238, 0.14);
+	box-shadow: inset 0 0 0 1px #00adee;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-option__sample {
+	display: flex;
+	flex: 0 0 64px;
+	align-items: center;
+	overflow: hidden;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-option__name {
+	flex-grow: 1;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-option__value {
+	color: #7a7a7a;
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+	font-size: 11px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chip--warning,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chip--warning:hover {
+	background: rgba(255, 135, 0, 0.14);
+	color: #ffb366;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-used__warning {
+	margin: 14px 0 6px;
+	color: #ffb366;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-subgroup {
+	margin: 18px 8px 4px;
+	color: #8c8c8c;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rows > .sg-subgroup:first-child {
+	margin-top: 4px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__detail {
+	display: flex;
+	flex-direction: column;
+}
+
+/* in the design panel (#222) a chip needs its own surface */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel .sg-chip {
+	background: #2f2f2f;
+	box-shadow: none;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel button.sg-chip:hover {
+	background: #3a3a3a;
+	color: #fff;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__notice {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 10px 12px;
+	border-radius: 4px;
+	background: #2f2f2f;
+	color: #cfcfcf;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__notice code {
+	font-family: 'Noto Sans Mono', ui-monospace, monospace;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-button {
+	height: 28px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 4px;
+	background: #3f3f3f;
+	color: #fff;
+	font-size: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-button:hover {
+	background: #00adee;
+}
+
+/* the marks of a token (Rail.tsx StateDot): violet an own value of the site, orange (.sg-dot) not published yet */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-dot--own {
+	background: #a78bfa;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__states {
+	display: inline-flex;
+	gap: 12px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__states > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-history {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__own {
+	align-self: flex-start;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__reset-all {
+	align-self: flex-start;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-editor__notice-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+/* the layer above the title of the tokens screen */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header__title {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header__title h1 {
+	line-height: 1.2;
 }

@@ -37,6 +37,18 @@ export function useTokenDraft(
 
 	return useMemo(() => {
 		const names = new Set([...Object.keys(current), ...Object.keys(overrides)]);
+		// several tokens at once (a text style, all variants): one draft, not one per token on the same old one
+		const setTokens = (changes: Record<string, string | null>) => {
+			const next = { ...current };
+			for (const [name, value] of Object.entries(changes)) {
+				if (value === null || value.trim() === '') {
+					delete next[name];
+				} else {
+					next[name] = value;
+				}
+			}
+			setDraft(next);
+		};
 		return {
 			draft: current,
 			// what the previews get: the value of every token as it is now (draft, else saved, else default), so a
@@ -53,15 +65,8 @@ export function useTokenDraft(
 			),
 			invalid,
 			unsaved: [...names].filter((name) => current[name] !== overrides[name]),
-			setToken: (name: string, value: string | null) => {
-				const next = { ...current };
-				if (value === null || value.trim() === '') {
-					delete next[name];
-				} else {
-					next[name] = value;
-				}
-				setDraft(next);
-			},
+			setToken: (name: string, value: string | null) => setTokens({ [name]: value }),
+			setTokens,
 			discard: (name?: string) => {
 				if (!name) {
 					setDraft(null);

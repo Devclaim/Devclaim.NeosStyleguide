@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
+import { ColorSchemes, useColorScheme } from '../components/ColorSchemes';
 import { Gallery } from '../components/Gallery';
 import { type Size, viewportSizes, Viewports } from '../components/Viewports';
 import { useData } from '../context';
@@ -12,6 +13,7 @@ let lastSize: Size = 'desktop';
 export function Elements({ level }: { level: string | null }) {
 	const { manifest, entries } = useData();
 	const [size, setSize] = useState<Size>(lastSize);
+	const [scheme, setScheme] = useColorScheme();
 	const width = viewportSizes(manifest.viewports)[size]?.width ?? 1280;
 	const shown = entries.filter((entry) => !level || entry.level === level);
 	const inGallery = manifest.gallery ? shown.filter((entry) => entry.gallery !== false) : [];
@@ -26,6 +28,7 @@ export function Elements({ level }: { level: string | null }) {
 					{shown.length} {shown.length === 1 ? 'Element' : 'Elemente'}
 				</span>
 				<span className="sg-header__spacer" />
+				{manifest.features.colorScheme && <ColorSchemes value={scheme} onChange={setScheme} />}
 				<Viewports
 					viewports={manifest.viewports}
 					sizes={['mobile', 'desktop']}
@@ -37,7 +40,9 @@ export function Elements({ level }: { level: string | null }) {
 				/>
 			</header>
 			<div className="sg-content">
-				{inGallery.length > 0 && <Gallery entries={inGallery} width={width} />}
+				{inGallery.length > 0 && (
+					<Gallery entries={inGallery} width={width} scheme={manifest.features.colorScheme ? scheme : null} />
+				)}
 				{alone.length > 0 && (
 					<section className="sg-section">
 						{inGallery.length > 0 && (

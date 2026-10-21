@@ -3,14 +3,70 @@ import { useState } from 'react';
 import { type Data, useData } from '../context';
 import { navigate, type Route } from '../route';
 import { searchEntries, searchTerm, searchTokens } from '../search';
-import { type Kind, kindsOf, resolveToken, shortName } from '../tokens';
+import {
+	hasLayers,
+	type Kind,
+	kindsOf,
+	type Layer,
+	layerKinds,
+	listedTokens,
+	resolveToken,
+	shortName,
+	textStyleDetails
+} from '../tokens';
 
-/** a token the draft sets to something other than its default */
-export const isChanged = (data: Data, name: string) =>
-	data.draft[name] !== undefined && data.draft[name] !== data.tokensByName.get(name)?.value;
+/**
+ * What the marks show (two dots): "own" the site has its own value, not the default; "unpublished" the workspace has a
+ * value that is not live yet (orange, as everywhere in Neos). Unpublished wins. A semantic token takes the strongest of
+ * its variants, a text style the one of its line height and paragraph spacing too
+ */
+export type TokenState = 'unpublished' | 'own' | null;
+
+const STATE_LABELS = { own: 'Eigener Wert: weicht vom Standard ab', unpublished: 'Unveröffentlicht: noch nicht live' };
+
+/** the names a mark of a token stands for: the token, its variants, the details of a text style */
+const markedNames = (data: Data, name: string) => {
+	const variants = (data.tokensByName.get(name)?.variants ?? []).map((variant) => variant.token);
+	return [name, ...variants, ...textStyleDetails(name, data.tokensByName)];
+};
+
+/** the state of one token value, not of its variants */
+export function valueState(data: Data, name: string): TokenState {
+	const value = data.draft[name];
+	if (data.live && (value ?? '') !== (data.live[name] ?? '')) {
+		return 'unpublished';
+	}
+	return value !== undefined && value !== data.tokensByName.get(name)?.value ? 'own' : null;
+}
+
+export const strongest = (states: TokenState[]): TokenState =>
+	states.includes('unpublished') ? 'unpublished' : states.includes('own') ? 'own' : null;
+
+export const tokenState = (data: Data, name: string): TokenState =>
+	strongest(markedNames(data, name).map((candidate) => valueState(data, candidate)));
+
+/** the mark of a state: a dot, violet for an own value, orange for unpublished */
+export function StateDot({ state }: { state: TokenState }) {
+	return state ? (
+		<span
+			className={state === 'own' ? 'sg-dot sg-dot--own' : 'sg-dot'}
+			role="img"
+			aria-label={STATE_LABELS[state]}
+			title={STATE_LABELS[state]}
+		/>
+	) : null;
+}
+
+/** a token the draft sets to something other than its default; a semantic token also when one of its variants is */
+export const isChanged = (data: Data, name: string): boolean => {
+	const changed = (token: string) =>
+		data.draft[token] !== undefined && data.draft[token] !== data.tokensByName.get(token)?.value;
+	return changed(name) || (data.tokensByName.get(name)?.variants ?? []).some((variant) => changed(variant.token));
+};
 
 // outside of React: "Tokens" opens the kind that was open last, the search stays while the view is closed
 let lastKind: string | null = null;
+let lastLayer: Layer | undefined;
 let lastSearch = '';
 
 type ItemProps = {
@@ -20,7 +76,7 @@ type ItemProps = {
 	active: boolean;
 	label: string;
 	count?: number;
-	dot?: boolean;
+	state?: TokenState;
 	nested?: boolean;
 	/** before the label (a swatch) */
 	icon?: React.ReactNode;
@@ -41,7 +97,7 @@ function Item(props: ItemProps) {
 			{props.icon}
 			<span className="sg-rail__label">{props.label}</span>
 			{props.meta && <span className="sg-rail__meta">{props.meta}</span>}
-			{props.dot && <span className="sg-dot" aria-label="geändert" />}
+			<StateDot state={props.state ?? null} />
 			{props.count !== undefined && <span className="sg-rail__count">{props.count}</span>}
 		</button>
 	);
@@ -82,7 +138,7 @@ function Results({ term, kinds, current }: { term: string; kinds: Kind[]; curren
 						Tokens <span>{tokens.length}</span>
 					</h3>
 					{tokens.map((token) => {
-						const to: Route = { screen: 'tokens', kind: kindOf(token.group) };
+						const to: Route = { screen: 'tokens', kind: kindOf(token.group), layer: token.layer };
 						const swatch = resolveToken(token.name, data.tokensByName, data.draft);
 						return (
 							<Item
@@ -94,7 +150,7 @@ function Results({ term, kinds, current }: { term: string; kinds: Kind[]; curren
 								}}
 								active={data.selectedToken === token.name}
 								label={shortName(token.name)}
-								dot={isChanged(data, token.name)}
+								state={tokenState(data, token.name)}
 								icon={
 									token.type === 'color' ? (
 										<span className="sg-swatch sg-swatch--tiny" style={{ background: swatch }} />
@@ -121,7 +177,32 @@ export function Rail({ route, onClose }: { route: Route; onClose: () => void }) 
 	const onTokens = route.screen === 'tokens';
 	if (onTokens && route.kind) {
 		lastKind = route.kind;
+		lastLayer = route.layer;
 	}
+	const layers = hasLayers(data.tokens);
+	// one item per kind of a layer (or of all tokens, without layers); a dot when one of its tokens changed
+	const kindItems = (items: Kind[], layer?: Layer) =>
+		items.map((kind) => {
+			const groups = new Set(kind.groups.map((group) => group.id));
+			// the tokens the kind lists, each with its variants and details (they are in other groups)
+			const listed = layer ? listedTokens(data.tokens, layer) : data.tokens.tokens;
+			const state = strongest(
+				listed.filter((token) => groups.has(token.group)).map((token) => tokenState(data, token.name))
+			);
+			const active =
+				onTokens &&
+				(route.layer ?? (layers ? 'semantic' : undefined)) === layer &&
+				(route.kind === kind.id || (!route.kind && kind === items[0]));
+			return (
+				<Item
+					key={`${layer ?? ''}${kind.id}`}
+					to={{ screen: 'tokens', kind: kind.id, layer }}
+					active={active}
+					label={kind.label}
+					state={state}
+				/>
+			);
+		});
 	const current = route.screen === 'element' ? data.entries.find((entry) => entry.id === route.id) : undefined;
 	const openLevel = route.screen === 'elements' ? route.level : current?.level;
 
@@ -131,7 +212,7 @@ export function Rail({ route, onClose }: { route: Route; onClose: () => void }) 
 				<button
 					type="button"
 					aria-pressed={onTokens}
-					onClick={() => navigate({ screen: 'tokens', kind: lastKind ?? kinds[0]?.id ?? null })}
+					onClick={() => navigate({ screen: 'tokens', kind: lastKind, layer: lastLayer })}
 				>
 					Tokens
 				</button>
@@ -153,16 +234,23 @@ export function Rail({ route, onClose }: { route: Route; onClose: () => void }) 
 			<div className="sg-rail__list">
 				{term ? (
 					<Results term={term} kinds={kinds} current={route} />
-				) : onTokens
-					? kinds.map((kind) => {
-							const groups = new Set(kind.groups.map((group) => group.id));
-							const changed = data.tokens.tokens.some((token) => groups.has(token.group) && isChanged(data, token.name));
-							const active = route.kind === kind.id || (!route.kind && kind === kinds[0]);
-							return (
-								<Item key={kind.id} to={{ screen: 'tokens', kind: kind.id }} active={active} label={kind.label} dot={changed} />
-							);
-						})
-					: [
+				) : onTokens ? (
+					layers ? (
+						<>
+							<h3 className="sg-rail__layer" title="Was die Website nutzt">
+								Semantic Tokens
+							</h3>
+							{kindItems(layerKinds(data.tokens, 'semantic'), 'semantic')}
+							<h3 className="sg-rail__layer sg-rail__layer--design" title="Die Werte des Designs, auf die sie zeigen">
+								Design Tokens
+							</h3>
+							{kindItems(layerKinds(data.tokens, 'design'), 'design')}
+						</>
+					) : (
+						kindItems(kinds)
+					)
+				) : (
+					[
 							<Item
 								key="all"
 								to={{ screen: 'elements', level: null }}
@@ -196,7 +284,8 @@ export function Rail({ route, onClose }: { route: Route; onClose: () => void }) 
 									</React.Fragment>
 								);
 							})
-						]}
+						]
+				)}
 			</div>
 
 			<div className="sg-rail__footer">

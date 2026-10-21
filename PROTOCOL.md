@@ -37,7 +37,7 @@ JSON, `GET` unless noted. Every response that is an object has `"protocol": 2`.
     "viewports": [{ "id": "md", "label": "Tablet (768)", "width": 768, "height": 1024 }],
     "preview": "/neos/styleguide/preview?entry={entry}&site={site}",
     "gallery": "/neos/styleguide/preview?entries={entries}&site={site}",
-    "features": { "grid": true }
+    "features": { "grid": true, "colorScheme": true }
 }
 ```
 
@@ -48,7 +48,9 @@ JSON, `GET` unless noted. Every response that is an object has `"protocol": 2`.
 - `gallery` (optional): a URL template for many entries on one page (below); `{entries}` are ids separated by commas.
     Without it the interface lists the entries as cards.
 - `features`: what the preview can do beyond the basics (below); missing ones are `false`. `grid`: it draws the page
-    grid of the website while `<html>` has the attribute `data-styleguide-grid`.
+    grid of the website while `<html>` has the attribute `data-styleguide-grid`. `colorScheme`: it shows the color
+    scheme `<html>` names in `data-color-scheme` (`light` or `dark`), whether the site has a dark mode or not, so the
+    dark values can be designed before it is switched on.
 
 ### `GET {adapter}/entries`
 
@@ -153,6 +155,8 @@ The design tokens of the frontend, with their defaults (not the values of a site
 - `editable`: `false` for tokens a site cannot change (breakpoints: fixed at build time).
 - `value` may refer to other tokens (`var(--color-sd-50)`).
 - `layer`, `variants`, `variantOf`, `variant`, `pointsAt` (optional, below): what the editor changes, and with what.
+- `subgroup` (optional): a part of the group the interface shows as a heading ("Flächen" of the semantic colors); the
+    SvelteKit adapter reads it from a comment `Subgroup: <label>` in the group, until the next one.
 
 #### Layers and variants
 
@@ -174,8 +178,10 @@ spacing scale for a spacing. Without layers (`layer` missing) the interface show
 
 The SvelteKit adapter reads all of it from the conventions of the stylesheets: a group whose label starts with
 "Semantic" holds semantic tokens, a semantic token named like another one plus `-light`, `-dark`, `-base`, `-md`, `-lg`
-or `-xl` is its variant, and a semantic token points at the design groups of its namespace (`--color-`, `--spacing-`,
-`--radius-`, `--shadow-`, `--font-`, `--text-size-` …).
+or `-xl` is its variant, and a semantic token points at the design groups its family refers to: the groups of the
+design tokens the tokens of its group (and its variant groups, "Semantic colors (light)" …) use in their defaults, of
+its namespace (`--color-`, `--spacing-` …). So the colors of the site offer the palette of the site, the colors of the
+event types their own; a family without such a reference offers every design group of its namespace.
 
 ### `POST {adapter}/tokens/validate`
 
@@ -219,7 +225,8 @@ directly. An adapter writes no script for the styleguide; it only has to render 
 
 - marks what it shows with the attribute `data-styleguide-root` (else the interface takes the `<body>`),
 - uses the design tokens as CSS custom properties, so a value set on `:root` restyles it,
-- draws the page grid for `data-styleguide-grid` on `<html>`, if its manifest says `features.grid`.
+- draws the page grid for `data-styleguide-grid` on `<html>`, if its manifest says `features.grid`,
+- shows the color scheme of `data-color-scheme` on `<html>`, if its manifest says `features.colorScheme`.
 
 The interface then
 
@@ -230,6 +237,7 @@ The interface then
 | sizes the iframe | the bottom of the root element, observed with a `ResizeObserver` |
 | lists the tokens an entry uses | the `var(--…)` of every style rule of the page that matches the root or an element in it |
 | shows the page grid | sets or removes `data-styleguide-grid` on `<html>` |
+| shows light or dark | sets `data-color-scheme` on `<html>` to `light` or `dark` (the switch next to the widths) |
 
 A new preview URL loads in a hidden iframe and replaces the shown one once it has loaded and has the draft, so a page
 of the adapter may take its time; it should not change its height long after it has loaded.
@@ -238,9 +246,10 @@ of the adapter may take its time; it should not change its height long after it 
 
 Served by this package, `Devclaim.NeosStyleguide` routes:
 
-- `GET /api/styleguide/v1/sites`: `{ "sites": [{ "key", "title", "languages", "designTokens" }] }`, the
-    token overrides of each site in the editor's workspace as `--name: value;` lines. For the adapter: the preview
-    renders an entry in the theme of the site, unpublished changes included.
+- `GET /api/styleguide/v1/sites`: `{ "sites": [{ "key", "title", "languages", "designTokens", "liveDesignTokens" }] }`,
+    the token overrides of each site in the editor's workspace as `--name: value;` lines, and as they are live. For the
+    adapter: the preview renders an entry in the theme of the site, unpublished changes included. For the interface:
+    what differs from live is not published yet.
 - `GET /api/styleguide/v1/fonts`: `{ "families": ["Inter"], "css": "@font-face{…}" }`, the fonts editors
     uploaded (Devclaim.NeosStyleguide `FontLibrary`, asset collection "Schriften"). For the interface: the font editor and
     the previews. Fonts are Neos', not the adapter's: the pages of the website print the same rules (the SvelteKit

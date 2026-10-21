@@ -1,15 +1,17 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { previewUrl } from '../api';
-import { isChanged } from '../components/Rail';
+import { ColorSchemes, useColorScheme } from '../components/ColorSchemes';
+import { StateDot, tokenState } from '../components/Rail';
 import { useStageStyle } from '../components/stageHeight';
 import { LoadingBar, usePreviewFrame } from '../components/usePreviewFrame';
 import { useSize } from '../components/useWidth';
 import { type Size, viewportSizes, Viewports } from '../components/Viewports';
 import { useData } from '../context';
-import { showGrid, usedTokens } from '../frames';
+import { showColorScheme, showGrid, usedTokens } from '../frames';
 import type { Editor, EntryDetails } from '../protocol';
-import { resolveToken, shortName } from '../tokens';
+import { hasLayers, resolveToken, shortName, valueName } from '../tokens';
+import { shownToken } from '../usage';
 
 // outside of React: the choices stay while the view is open
 let lastSize: Size = 'desktop';
@@ -58,6 +60,70 @@ function Field({ name, editor, value, onChange }: { name: string; editor: Editor
 	);
 }
 
+/** a token the element uses as a chip; a click opens it in the design panel */
+function TokenChip({ name, warning }: { name: string; warning?: boolean }) {
+	const data = useData();
+	const token = data.tokensByName.get(name);
+	const shown = token?.variants?.[0]?.token ?? name;
+	return (
+		<button
+			type="button"
+			className={warning ? 'sg-chip sg-chip--warning' : 'sg-chip'}
+			aria-pressed={data.selectedToken === name}
+			onClick={() => data.selectToken(name)}
+		>
+			{token?.type === 'color' && (
+				<span
+					className="sg-swatch sg-swatch--tiny"
+					style={{ background: resolveToken(shown, data.tokensByName, data.draft) }}
+				/>
+			)}
+			{name.startsWith('--text-size-') ? valueName(name) : shortName(name)}
+			<StateDot state={tokenState(data, name)} />
+		</button>
+	);
+}
+
+/**
+ * The tokens an element uses: with layers the semantic tokens (a variant counts as its token) and, as a warning, the
+ * design tokens it uses directly
+ */
+function UsedTokens({ used }: { used: string[] }) {
+	const { tokens, tokensByName } = useData();
+	if (!hasLayers(tokens)) {
+		return (
+			<div className="sg-chips">
+				{used.map((name) => (
+					<TokenChip key={name} name={name} />
+				))}
+			</div>
+		);
+	}
+	// as the editor shows them: a variant as its token, the line height of a text style as its size (usage.ts)
+	const shown = used.map((name) => shownToken(name, tokensByName)).filter((name) => name !== null);
+	const semantic = [...new Set(shown.filter((name) => tokensByName.get(name)?.layer === 'semantic'))];
+	const design = [...new Set(shown.filter((name) => tokensByName.get(name)?.layer === 'design'))];
+	return (
+		<>
+			<div className="sg-chips">
+				{semantic.map((name) => (
+					<TokenChip key={name} name={name} />
+				))}
+			</div>
+			{design.length > 0 && (
+				<>
+					<p className="sg-used__warning">Direkt aus den Design Tokens: sollten Semantic Tokens sein</p>
+					<div className="sg-chips">
+						{design.map((name) => (
+							<TokenChip key={name} name={name} warning />
+						))}
+					</div>
+				</>
+			)}
+		</>
+	);
+}
+
 /**
  * one element: use cases, the preview at a viewport width (with the page grid), its props and the tokens it uses. A
  * whole page (entry.page) fills the room instead and scrolls inside its frame, like in a browser window: a frame as
@@ -73,6 +139,7 @@ export function Element({ id }: { id: string }) {
 	const [props, setProps] = useState<Record<string, unknown>>({});
 	const [size, setSize] = useState<Size>(lastSize);
 	const [grid, setGrid] = useState(lastGrid);
+	const [scheme, setScheme] = useColorScheme();
 	const [used, setUsed] = useState<string[]>([]);
 	const [shownId, setShownId] = useState(id);
 	if (shownId !== id) {
@@ -97,7 +164,12 @@ export function Element({ id }: { id: string }) {
 		extra.props = JSON.stringify(props);
 	}
 	const src = entry ? previewUrl(manifest, entry.id, site.key, extra) : null;
-	const preview = usePreviewFrame(src, target, previewDraft, (document) => showGrid(document, grid));
+	const preview = usePreviewFrame(src, target, previewDraft, (document) => {
+		showGrid(document, grid);
+		if (manifest.features.colorScheme) {
+			showColorScheme(document, scheme);
+		}
+	});
 	// while the next page loads, the room keeps the layout of the shown one (no stretched old preview)
 	const { page, width } = preview.loading ? (preview.shownLayout ?? target) : target;
 	const scaleOf = (frameWidth: number) => (room.width > 0 ? Math.min(1, room.width / frameWidth) : 1);
@@ -126,6 +198,12 @@ export function Element({ id }: { id: string }) {
 			showGrid(preview.document, grid);
 		}
 	}, [preview.document, grid]);
+
+	useEffect(() => {
+		if (preview.document && manifest.features.colorScheme) {
+			showColorScheme(preview.document, scheme);
+		}
+	}, [preview.document, scheme, manifest.features.colorScheme]);
 
 	// the tokens the element uses, once the preview is rendered
 	useEffect(() => {
@@ -197,6 +275,7 @@ export function Element({ id }: { id: string }) {
 						</svg>
 					</button>
 				)}
+				{manifest.features.colorScheme && <ColorSchemes value={scheme} onChange={setScheme} />}
 				<Viewports
 					viewports={manifest.viewports}
 					sizes={['mobile', 'tablet', 'desktop']}
@@ -251,26 +330,7 @@ export function Element({ id }: { id: string }) {
 							{used.length === 0 ? (
 								<p className="sg-muted">…</p>
 							) : (
-								<div className="sg-chips">
-									{used.map((name) => {
-										const token = tokensByName.get(name);
-										return (
-											<button
-												key={name}
-												type="button"
-												className="sg-chip"
-												aria-pressed={data.selectedToken === name}
-												onClick={() => data.selectToken(name)}
-											>
-												{token?.type === 'color' && (
-													<span className="sg-swatch sg-swatch--tiny" style={{ background: resolveToken(name, tokensByName, data.draft) }} />
-												)}
-												{shortName(name)}
-												{isChanged(data, name) && <span className="sg-dot" aria-label="geändert" />}
-											</button>
-										);
-									})}
-								</div>
+								<UsedTokens used={used} />
 							)}
 						</section>
 					</div>

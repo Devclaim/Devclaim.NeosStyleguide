@@ -57,6 +57,11 @@ export function showGrid(document: Document, visible: boolean) {
 	document.documentElement.toggleAttribute('data-styleguide-grid', visible);
 }
 
+/** the color scheme of the preview: the adapter shows it for this attribute (manifest features.colorScheme) */
+export function showColorScheme(document: Document, scheme: 'light' | 'dark') {
+	document.documentElement.setAttribute('data-color-scheme', scheme);
+}
+
 /** what a preview shows: the element with data-styleguide-root, else the body */
 export const previewRoot = (document: Document): Element =>
 	document.querySelector('[data-styleguide-root]') ?? document.body;
@@ -89,6 +94,20 @@ export function watchHeight(document: Document, callback: (height: number) => vo
  * one of them): for "Verwendet" of an element
  */
 export function usedTokens(document: Document, root: Element = previewRoot(document)): string[] {
+	const rules = styleRules(document);
+	const elements = [root, ...Array.from(root.querySelectorAll('*'))];
+	const names = new Set<string>();
+	for (const rule of rules) {
+		const vars = rule.style.cssText.match(/var\(--[\w-]+/g);
+		if (vars && elements.some((element) => matches(element, rule.selectorText))) {
+			vars.forEach((name) => names.add(name.slice(4)));
+		}
+	}
+	return [...names].sort();
+}
+
+/** the style rules of the stylesheets of the page, also those inside media queries and layers */
+function styleRules(document: Document): CSSStyleRule[] {
 	const rules: CSSStyleRule[] = [];
 	const view = document.defaultView;
 	const collect = (list: CSSRuleList) => {
@@ -108,21 +127,25 @@ export function usedTokens(document: Document, root: Element = previewRoot(docum
 			// a stylesheet of another origin
 		}
 	}
-	const elements = [root, ...Array.from(root.querySelectorAll('*'))];
-	const names = new Set<string>();
-	for (const rule of rules) {
-		const vars = rule.style.cssText.match(/var\(--[\w-]+/g);
-		if (vars && elements.some((element) => matches(element, rule.selectorText))) {
-			vars.forEach((name) => names.add(name.slice(4)));
-		}
-	}
-	return [...names].sort();
+	return rules;
 }
 
+/**
+ * States an element only has while it is used (hover, focus …) and the parts of an element (::before …): a rule for
+ * them applies to the element too, "Verwendet" should count it without anyone hovering
+ */
+const STATES =
+	/::?(?:hover|focus-visible|focus-within|focus|active|visited|checked|disabled|placeholder-shown|user-invalid|invalid|open|before|after|placeholder|file-selector-button|marker|selection)(?![\w-])/g;
+
 function matches(element: Element, selector: string) {
-	try {
-		return element.matches(selector);
-	} catch {
-		return false;
+	for (const candidate of [selector, selector.replace(STATES, '')]) {
+		try {
+			if (element.matches(candidate)) {
+				return true;
+			}
+		} catch {
+			// a selector the browser does not take (also one emptied by removing a state, ":not()")
+		}
 	}
+	return false;
 }

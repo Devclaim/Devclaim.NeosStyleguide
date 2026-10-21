@@ -2,8 +2,10 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { galleryUrl } from '../api';
 import { useData } from '../context';
+import { showColorScheme } from '../frames';
 import type { EntrySummary } from '../protocol';
 import { navigate } from '../route';
+import type { ColorScheme } from './ColorSchemes';
 import { useStageStyle } from './stageHeight';
 import { LoadingBar, usePreviewFrame } from './usePreviewFrame';
 import { useWidth } from './useWidth';
@@ -31,7 +33,16 @@ function reserveLabels(document: Document, scale: number) {
  * scaled into the room there is. The labels are the interface's: room for them is reserved in the page (a style in its
  * head), they lie over it at the measured places of the entries; a click opens the entry.
  */
-export function Gallery({ entries, width }: { entries: EntrySummary[]; width: number }) {
+export function Gallery({
+	entries,
+	width,
+	scheme
+}: {
+	entries: EntrySummary[];
+	width: number;
+	/** the color scheme of the page; null: the adapter cannot show one */
+	scheme: ColorScheme | null;
+}) {
 	const { manifest, site, previewDraft } = useData();
 	const container = useRef<HTMLDivElement>(null);
 	const room = useWidth(container);
@@ -42,13 +53,24 @@ export function Gallery({ entries, width }: { entries: EntrySummary[]; width: nu
 		entries.map((entry) => entry.id),
 		site.key
 	);
-	const preview = usePreviewFrame(src, null, previewDraft, (document) => reserveLabels(document, scale));
+	const preview = usePreviewFrame(src, null, previewDraft, (document) => {
+		reserveLabels(document, scale);
+		if (scheme) {
+			showColorScheme(document, scheme);
+		}
+	});
 
 	useEffect(() => {
 		if (preview.document) {
 			reserveLabels(preview.document, scale);
 		}
 	}, [preview.document, scale]);
+
+	useEffect(() => {
+		if (preview.document && scheme) {
+			showColorScheme(preview.document, scheme);
+		}
+	}, [preview.document, scheme]);
 
 	// where the entries are: again whenever the page changes its height
 	useEffect(() => {

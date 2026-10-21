@@ -19,7 +19,7 @@ function ViewContainer() {
  */
 manifest('@devclaim/neos-styleguide', {}, (globalRegistry, { store, frontendConfiguration }) => {
 	const settings = frontendConfiguration['Devclaim.NeosStyleguide'];
-	configure(settings?.adapter ?? '/neos/styleguide/api/v1', settings?.fonts ?? null);
+	configure(settings?.adapter ?? '/neos/styleguide/api/v1', settings?.fonts ?? null, settings?.sites ?? null);
 	connectStore(store);
 	const containers = globalRegistry.get('containers');
 	containers.set('PrimaryToolbar/Right/DevclaimNeosStyleguide', ToolbarButton, 'before PrimaryToolbar/Right/DimensionSwitcher');

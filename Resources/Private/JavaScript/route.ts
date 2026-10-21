@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import type { Layer } from './tokens';
 
 /** the screens of the styleguide */
 export type Route =
-	| { screen: 'tokens'; kind: string | null }
+	| { screen: 'tokens'; kind: string | null; layer?: Layer }
 	| { screen: 'elements'; level: string | null }
 	| { screen: 'element'; id: string };
 

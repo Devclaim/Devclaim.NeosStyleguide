@@ -2,8 +2,18 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useData } from '../context';
 import { searchTerm, searchTokens } from '../search';
-import { isScaleGroup, kindsOf, resolveToken, scalesOf, shortName, shortValue } from '../tokens';
-import { isChanged } from './Rail';
+import {
+	hasLayers,
+	isScaleGroup,
+	kindsOf,
+	layerKinds,
+	listedTokens,
+	resolveToken,
+	scalesOf,
+	shortName,
+	shortValue
+} from '../tokens';
+import { StateDot, tokenState } from './Rail';
 
 // outside of React: the open kinds stay while the editor is rendered anew
 const open = new Set<string>(['colors']);
@@ -16,9 +26,13 @@ export function TokenBrowser() {
 	const data = useData();
 	const [search, setSearch] = useState('');
 	const [, rerender] = useState(0);
-	const kinds = kindsOf(data.tokens);
+	// with layers: the semantic tokens (what the website uses); their variants are in the editor
+	const layered = hasLayers(data.tokens);
+	const kinds = layered ? layerKinds(data.tokens, 'semantic') : kindsOf(data.tokens);
 	const term = searchTerm(search);
-	const editable = data.tokens.tokens.filter((token) => token.editable);
+	const editable = (layered ? listedTokens(data.tokens, 'semantic') : data.tokens.tokens).filter(
+		(token) => token.editable
+	);
 	const matches = term ? searchTokens(editable, data.tokens.groups, term) : [];
 
 	const row = (name: string) => {
@@ -26,16 +40,18 @@ export function TokenBrowser() {
 		if (!token) {
 			return null;
 		}
-		const value = data.draft[name] ?? token.value;
+		// a semantic token with variants: its first variant (the token itself only switches between them)
+		const shown = token.variants?.[0]?.token ?? name;
+		const value = data.draft[shown] ?? data.tokensByName.get(shown)?.value ?? token.value;
 		return (
 			<button key={name} type="button" className="sg-browser__row" onClick={() => data.selectToken(name)}>
 				{token.type === 'color' ? (
-					<span className="sg-swatch sg-swatch--small" style={{ background: resolveToken(name, data.tokensByName, data.draft) }} />
+					<span className="sg-swatch sg-swatch--small" style={{ background: resolveToken(shown, data.tokensByName, data.draft) }} />
 				) : (
 					<span className="sg-browser__type">{token.type === 'font' ? 'Aa' : ''}</span>
 				)}
 				<span className="sg-browser__name">{shortName(name)}</span>
-				{isChanged(data, name) && <span className="sg-dot" aria-label="geändert" />}
+				<StateDot state={tokenState(data, name)} />
 				<span className="sg-browser__value">{shortValue(value)}</span>
 			</button>
 		);

@@ -39,3 +39,6 @@ Neos:
           adapter: '/neos/styleguide/api/v1'
           # the fonts editors uploaded (ApiController fontsAction): from Neos, independent of the adapter
           fonts: '/api/styleguide/v1/fonts'
+          # the sites with their design tokens in the editor's workspace and live (ApiController sitesAction): what is
+          # not published yet
+          sites: '/api/styleguide/v1/sites'

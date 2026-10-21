@@ -5,7 +5,7 @@ import { type Data, DataContext, type Fonts } from '../context';
 import { useTokenDraft } from '../draft';
 import { applyFontCss } from '../frames';
 import type { EntrySummary, Manifest, Tokens } from '../protocol';
-import { persistTokens, useSiteNode } from './neos';
+import { persistTokens, usePublishableCount, useSiteNode } from './neos';
 import { getViewState, setViewState, useViewState } from './store';
 
 type Loaded = { manifest: Manifest; entries: EntrySummary[]; tokens: Tokens; fonts: Fonts };
@@ -15,15 +15,35 @@ const SAVE_DELAY = 700;
 
 let api: Api | null = null;
 let fontsUrl: string | null = null;
+let sitesUrl: string | null = null;
 let loading: Promise<Loaded> | null = null;
 
 /**
  * The adapter (the adapter of the frontendConfiguration of the Neos UI, Configuration/Settings.yaml) and the fonts of Neos (this
  * package's API), loaded once
  */
-export function configure(adapter: string, fonts: string | null) {
+export function configure(adapter: string, fonts: string | null, sites: string | null) {
 	api = createApi(adapter);
 	fontsUrl = fonts;
+	sitesUrl = sites;
+}
+
+/** the design tokens of a site as they are live (published); null if Neos does not say (no marks "unpublished") */
+async function loadLiveTokens(site: string): Promise<Record<string, string> | null> {
+	if (!sitesUrl) {
+		return null;
+	}
+	try {
+		const response = await fetch(sitesUrl, { credentials: 'same-origin', headers: { accept: 'application/json' } });
+		if (!response.ok) {
+			return null;
+		}
+		const { sites } = (await response.json()) as { sites: { key: string; liveDesignTokens?: string | null }[] };
+		const found = sites.find((candidate) => candidate.key === site);
+		return found && 'liveDesignTokens' in found ? parseOverrides(found.liveDesignTokens ?? null) : null;
+	} catch {
+		return null;
+	}
 }
 
 /** the fonts editors uploaded; none if Neos does not answer (the system fonts still work) */
@@ -74,6 +94,21 @@ export function EmbeddedData({ children }: { children: React.ReactNode }) {
 
 	const persisted = node?.designTokens ?? null;
 	const overrides = useMemo(() => parseOverrides(persisted), [persisted]);
+
+	// what is live: again after every save, publish and discard of the workspace
+	const publishable = usePublishableCount();
+	const [live, setLive] = useState<Record<string, string> | null>(null);
+	const siteKey = node?.key;
+	useEffect(() => {
+		if (!siteKey) {
+			return;
+		}
+		let current = true;
+		loadLiveTokens(siteKey).then((result) => current && setLive(result));
+		return () => {
+			current = false;
+		};
+	}, [siteKey, persisted, publishable]);
 
 	// the draft is done once the workspace has it
 	useEffect(() => {
@@ -143,12 +178,13 @@ export function EmbeddedData({ children }: { children: React.ReactNode }) {
 			tokensByName: new Map(loaded.tokens.tokens.map((token) => [token.name, token])),
 			site: { key: node.key, title: node.title, designTokens: persisted },
 			overrides,
+			live,
 			...tokenDraft,
 			previewDraft,
 			selectedToken: view.selectedToken,
 			selectToken: (name) => setViewState({ selectedToken: name })
 		};
-	}, [loaded, node, persisted, overrides, tokenDraft, previewDraft, view.selectedToken]);
+	}, [loaded, node, persisted, overrides, live, tokenDraft, previewDraft, view.selectedToken]);
 
 	if (failure) {
 		return <div className="sg-message">Der Styleguide konnte nicht geladen werden: {failure}</div>;

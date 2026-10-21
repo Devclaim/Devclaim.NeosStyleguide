@@ -17,6 +17,8 @@ export type Data = {
 	site: Site;
 	/** the saved overrides of the site */
 	overrides: Record<string, string>;
+	/** the overrides as they are live (published); null: unknown (no marks "unpublished") */
+	live: Record<string, string> | null;
 	/** the overrides as the editor is changing them (not saved yet); starts as the saved ones */
 	draft: Record<string, string>;
 	/** what the previews get: the current value of every editable token (draft, else saved, else default) */
@@ -30,6 +32,8 @@ export type Data = {
 	unsaved: string[];
 	/** sets the value of a token in the draft; null: back to the default (no override) */
 	setToken: (name: string, value: string | null) => void;
+	/** sets several tokens at once (null: back to the default); one call, so none of them is lost */
+	setTokens: (changes: Record<string, string | null>) => void;
 	/** back to the saved overrides; with a name: only that token */
 	discard: (name?: string) => void;
 	selectedToken: string | null;

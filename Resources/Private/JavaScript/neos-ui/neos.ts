@@ -88,6 +88,25 @@ export function useSiteNode(): SiteNode | null {
 	return node;
 }
 
+/** how many changes the editor's workspace has that are not published: changes with every publish and discard */
+function publishableCount(): number {
+	const state = store?.getState() as { cr?: { workspaces?: { personalWorkspace?: { publishableNodes?: unknown[] } } } };
+	return state?.cr?.workspaces?.personalWorkspace?.publishableNodes?.length ?? 0;
+}
+
+export function usePublishableCount(): number {
+	const [count, setCount] = useState(publishableCount);
+	useEffect(() => {
+		if (!store) {
+			return;
+		}
+		const update = () => setCount(publishableCount());
+		update();
+		return store.subscribe(update);
+	}, []);
+	return count;
+}
+
 /** saves the tokens into the editor's workspace: the change the Neos UI sends for an inline edit of a property */
 export function persistTokens(contextPath: string, designTokens: string) {
 	saving = true;

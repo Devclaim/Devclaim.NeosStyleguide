@@ -31,7 +31,7 @@ export function StyleguideView() {
 				<div className="sg-app">
 					<Rail route={route} onClose={() => setViewState({ open: false })} />
 					<main className="sg-main">
-						{route.screen === 'tokens' && <TokensOverview kind={route.kind} />}
+						{route.screen === 'tokens' && <TokensOverview kind={route.kind} layer={route.layer} />}
 						{route.screen === 'elements' && <Elements level={route.level} />}
 						{route.screen === 'element' && <Element id={route.id} />}
 					</main>
