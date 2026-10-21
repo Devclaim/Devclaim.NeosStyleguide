@@ -1456,3 +1456,9 @@
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header__title h1 {
 	line-height: 1.2;
 }
+
+/* when a token is seen: "beim Hover", "verborgen" (Element.tsx) */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chip__note {
+	color: #8c8c8c;
+	font-size: 11px;
+}

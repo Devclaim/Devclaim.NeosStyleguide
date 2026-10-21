@@ -94,35 +94,134 @@ export function watchHeight(document: Document, callback: (height: number) => vo
  * one of them): for "Verwendet" of an element
  */
 export function usedTokens(document: Document, root: Element = previewRoot(document)): string[] {
-	const rules = styleRules(document);
+	return [...tokenUses(document, root).keys()].sort();
+}
+
+/**
+ * How the preview uses a token: always, or only in a state of an element (hover, focus …: the rule needs it); and
+ * whether one of its elements is seen now (not in a closed accordion, not hidden)
+ */
+export type TokenUse = { always: boolean; states: string[]; visible: boolean };
+
+/** the states a selector needs (not the parts of an element like ::before, which are always there) */
+// not an escaped one in a class name (Tailwind: .hover\:bg-brand-hover:hover, .\[\&\:has\(…\:hover\)\]\:…)
+const INTERACTION = /(?<!\\):(hover|focus-visible|focus-within|focus|active|visited|checked|disabled|placeholder-shown|user-invalid|invalid|open)(?![\w-])/g;
+
+/**
+ * Whether an element is seen: it has a box, and no ancestor clips it away, also through slots of web components (a
+ * closed sl-details keeps its content, at a height of 0 in its shadow DOM)
+ */
+function isSeen(element: Element): boolean {
+	const view = element.ownerDocument.defaultView;
+	if (!view || element.getClientRects().length === 0) {
+		return false;
+	}
+	if ('checkVisibility' in element && !element.checkVisibility({ visibilityProperty: true, opacityProperty: true })) {
+		return false;
+	}
+	let current: Element | null = element;
+	while (current) {
+		const style = view.getComputedStyle(current);
+		const box = current.getBoundingClientRect();
+		if (style.overflow !== 'visible' && (box.height < 1 || box.width < 1)) {
+			return false;
+		}
+		const root = current.getRootNode();
+		current = current.assignedSlot ?? current.parentElement ?? (root instanceof view.ShadowRoot ? root.host : null);
+	}
+	return true;
+}
+
+/**
+ * Shows the states of tokens without anyone hovering: the rules that use one of the names and need a state (hover,
+ * focus …) once more without it, at the end of the head (no layer: they win). No names: none
+ */
+export function forceStates(document: Document, names: string[]) {
+	let style = document.head.querySelector<HTMLStyleElement>('style[data-styleguide-states]');
+	if (!style) {
+		style = document.createElement('style');
+		style.dataset.styleguideStates = '';
+	}
+	if (document.head.lastElementChild !== style) {
+		document.head.append(style);
+	}
+	const wanted = new Set(names);
+	const rules: string[] = [];
+	for (const rule of names.length > 0 ? styleRules(document) : []) {
+		const vars = rule.style.cssText.match(/var\(--[\w-]+/g) ?? [];
+		if (!vars.some((name) => wanted.has(name.slice(4))) || !INTERACTION.test(rule.selector)) {
+			continue;
+		}
+		INTERACTION.lastIndex = 0;
+		const selector = rule.selector.replace(INTERACTION, '');
+		try {
+			document.querySelector(selector);
+		} catch {
+			// emptied by removing the state (":not()"): left out
+			continue;
+		}
+		rules.push(`${selector}{${rule.style.cssText}}`);
+	}
+	INTERACTION.lastIndex = 0;
+	style.textContent = rules.join('\n');
+}
+
+export function tokenUses(document: Document, root: Element = previewRoot(document)): Map<string, TokenUse> {
 	const elements = [root, ...Array.from(root.querySelectorAll('*'))];
-	const names = new Set<string>();
-	for (const rule of rules) {
+	const uses = new Map<string, TokenUse>();
+	for (const rule of styleRules(document)) {
 		const vars = rule.style.cssText.match(/var\(--[\w-]+/g);
-		if (vars && elements.some((element) => matches(element, rule.selectorText))) {
-			vars.forEach((name) => names.add(name.slice(4)));
+		if (!vars) {
+			continue;
+		}
+		const matched = elements.filter((element) => matches(element, rule.selector));
+		if (matched.length === 0) {
+			continue;
+		}
+		const states = [...new Set([...rule.selector.matchAll(INTERACTION)].map((match) => match[1]))];
+		const visible = matched.some(isSeen);
+		for (const variable of vars) {
+			const name = variable.slice(4);
+			const use = uses.get(name) ?? { always: false, states: [], visible: false };
+			use.always ||= states.length === 0;
+			use.states = [...new Set([...use.states, ...states])];
+			use.visible ||= visible;
+			uses.set(name, use);
 		}
 	}
-	return [...names].sort();
+	return uses;
 }
 
 /** the style rules of the stylesheets of the page, also those inside media queries and layers */
-function styleRules(document: Document): CSSStyleRule[] {
-	const rules: CSSStyleRule[] = [];
+/** a style rule with its whole selector: a nested rule ("&:hover" in "& a" in ".prose") as one */
+type StyleRule = { selector: string; style: CSSStyleDeclaration };
+
+/** the selector of a nested rule within the one of its parent: "&" is the parent, without "&" a descendant of it */
+function nestedSelector(selector: string, parent: string | null): string {
+	if (parent === null) {
+		return selector;
+	}
+	return selector.includes('&') ? selector.split('&').join(`:is(${parent})`) : `:is(${parent}) ${selector}`;
+}
+
+function styleRules(document: Document): StyleRule[] {
+	const rules: StyleRule[] = [];
 	const view = document.defaultView;
-	const collect = (list: CSSRuleList) => {
+	const collect = (list: CSSRuleList, parent: string | null) => {
 		for (const rule of Array.from(list)) {
+			let inner = parent;
 			if (view && rule instanceof view.CSSStyleRule) {
-				rules.push(rule);
+				inner = nestedSelector(rule.selectorText, parent);
+				rules.push({ selector: inner, style: rule.style });
 			}
 			if ('cssRules' in rule && (rule as CSSGroupingRule).cssRules) {
-				collect((rule as CSSGroupingRule).cssRules);
+				collect((rule as CSSGroupingRule).cssRules, inner);
 			}
 		}
 	};
 	for (const sheet of Array.from(document.styleSheets)) {
 		try {
-			collect(sheet.cssRules);
+			collect(sheet.cssRules, null);
 		} catch {
 			// a stylesheet of another origin
 		}
@@ -135,7 +234,7 @@ function styleRules(document: Document): CSSStyleRule[] {
  * them applies to the element too, "Verwendet" should count it without anyone hovering
  */
 const STATES =
-	/::?(?:hover|focus-visible|focus-within|focus|active|visited|checked|disabled|placeholder-shown|user-invalid|invalid|open|before|after|placeholder|file-selector-button|marker|selection)(?![\w-])/g;
+	/(?<!\\)::?(?:hover|focus-visible|focus-within|focus|active|visited|checked|disabled|placeholder-shown|user-invalid|invalid|open|before|after|placeholder|file-selector-button|marker|selection)(?![\w-])/g;
 
 function matches(element: Element, selector: string) {
 	for (const candidate of [selector, selector.replace(STATES, '')]) {

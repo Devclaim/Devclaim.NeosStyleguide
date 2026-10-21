@@ -8,9 +8,9 @@ import { LoadingBar, usePreviewFrame } from '../components/usePreviewFrame';
 import { useSize } from '../components/useWidth';
 import { type Size, viewportSizes, Viewports } from '../components/Viewports';
 import { useData } from '../context';
-import { showColorScheme, showGrid, usedTokens } from '../frames';
+import { forceStates, previewRoot, showColorScheme, showGrid, type TokenUse, tokenUses } from '../frames';
 import type { Editor, EntryDetails } from '../protocol';
-import { hasLayers, resolveToken, shortName, valueName } from '../tokens';
+import { hasLayers, pageNames, resolveToken, shortName, valueName } from '../tokens';
 import { shownToken } from '../usage';
 
 // outside of React: the choices stay while the view is open
@@ -61,16 +61,77 @@ function Field({ name, editor, value, onChange }: { name: string; editor: Editor
 }
 
 /** a token the element uses as a chip; a click opens it in the design panel */
-function TokenChip({ name, warning }: { name: string; warning?: boolean }) {
+/** what the states are called on a chip */
+const STATE_LABELS: Record<string, string> = {
+	hover: 'Hover',
+	focus: 'Fokus',
+	'focus-visible': 'Fokus',
+	'focus-within': 'Fokus',
+	active: 'Klick',
+	visited: 'besucht',
+	checked: 'ausgewählt',
+	disabled: 'deaktiviert',
+	invalid: 'ungültig',
+	'user-invalid': 'ungültig',
+	'placeholder-shown': 'leer',
+	open: 'offen'
+};
+
+/** when a token is seen in the preview: "beim Hover", "verborgen" (in a closed part); nothing when it is plain */
+function useNote(use: TokenUse | undefined): string {
+	if (!use) {
+		return '';
+	}
+	const notes: string[] = [];
+	if (!use.always && use.states.length > 0) {
+		notes.push(`beim ${[...new Set(use.states.map((state) => STATE_LABELS[state] ?? state))].join(' / ')}`);
+	}
+	if (!use.visible) {
+		notes.push('verborgen');
+	}
+	return notes.join(', ');
+}
+
+// outside of React: the chip the pointer is on, its states shown in the preview (Element)
+let pointed: string | null = null;
+const pointedListeners = new Set<(name: string | null) => void>();
+const point = (name: string | null) => {
+	pointed = name;
+	pointedListeners.forEach((listener) => listener(name));
+};
+
+function usePointed(): string | null {
+	const [name, setName] = useState(pointed);
+	useEffect(() => {
+		pointedListeners.add(setName);
+		return () => {
+			pointedListeners.delete(setName);
+		};
+	}, []);
+	return name;
+}
+
+function TokenChip({ name, use, warning }: { name: string; use?: TokenUse; warning?: boolean }) {
 	const data = useData();
 	const token = data.tokensByName.get(name);
 	const shown = token?.variants?.[0]?.token ?? name;
+	const note = useNote(use);
+	const stateful = Boolean(use && !use.always && use.states.length > 0);
+	const hints = [
+		stateful && 'Zeigt den Zustand in der Vorschau, solange der Zeiger hier ist',
+		use && !use.visible && 'In einem Teil, der gerade nicht zu sehen ist (z. B. zugeklappt)'
+	].filter(Boolean);
 	return (
 		<button
 			type="button"
 			className={warning ? 'sg-chip sg-chip--warning' : 'sg-chip'}
 			aria-pressed={data.selectedToken === name}
+			title={hints.length > 0 ? hints.join('. ') : undefined}
 			onClick={() => data.selectToken(name)}
+			onMouseEnter={() => point(name)}
+			onMouseLeave={() => point(null)}
+			onFocus={() => point(name)}
+			onBlur={() => point(null)}
 		>
 			{token?.type === 'color' && (
 				<span
@@ -79,6 +140,7 @@ function TokenChip({ name, warning }: { name: string; warning?: boolean }) {
 				/>
 			)}
 			{name.startsWith('--text-size-') ? valueName(name) : shortName(name)}
+			{note && <span className="sg-chip__note">{note}</span>}
 			<StateDot state={tokenState(data, name)} />
 		</button>
 	);
@@ -88,26 +150,45 @@ function TokenChip({ name, warning }: { name: string; warning?: boolean }) {
  * The tokens an element uses: with layers the semantic tokens (a variant counts as its token) and, as a warning, the
  * design tokens it uses directly
  */
-function UsedTokens({ used }: { used: string[] }) {
+function UsedTokens({ used }: { used: Map<string, TokenUse> }) {
 	const { tokens, tokensByName } = useData();
 	if (!hasLayers(tokens)) {
 		return (
 			<div className="sg-chips">
-				{used.map((name) => (
-					<TokenChip key={name} name={name} />
+				{[...used].map(([name, use]) => (
+					<TokenChip key={name} name={name} use={use} />
 				))}
 			</div>
 		);
 	}
-	// as the editor shows them: a variant as its token, the line height of a text style as its size (usage.ts)
-	const shown = used.map((name) => shownToken(name, tokensByName)).filter((name) => name !== null);
-	const semantic = [...new Set(shown.filter((name) => tokensByName.get(name)?.layer === 'semantic'))];
-	const design = [...new Set(shown.filter((name) => tokensByName.get(name)?.layer === 'design'))];
+	// as the editor shows them: a variant as its token, the line height of a text style as its size (usage.ts); the
+	// uses of all names of a token together
+	const merged = new Map<string, TokenUse>();
+	for (const [name, use] of used) {
+		const token = shownToken(name, tokensByName);
+		if (!token) {
+			continue;
+		}
+		const before = merged.get(token);
+		merged.set(
+			token,
+			before
+				? {
+						always: before.always || use.always,
+						states: [...new Set([...before.states, ...use.states])],
+						visible: before.visible || use.visible
+					}
+				: use
+		);
+	}
+	const shown = [...merged.keys()];
+	const semantic = shown.filter((name) => tokensByName.get(name)?.layer === 'semantic');
+	const design = shown.filter((name) => tokensByName.get(name)?.layer === 'design');
 	return (
 		<>
 			<div className="sg-chips">
 				{semantic.map((name) => (
-					<TokenChip key={name} name={name} />
+					<TokenChip key={name} name={name} use={merged.get(name)} />
 				))}
 			</div>
 			{design.length > 0 && (
@@ -115,7 +196,7 @@ function UsedTokens({ used }: { used: string[] }) {
 					<p className="sg-used__warning">Direkt aus den Design Tokens: sollten Semantic Tokens sein</p>
 					<div className="sg-chips">
 						{design.map((name) => (
-							<TokenChip key={name} name={name} warning />
+							<TokenChip key={name} name={name} use={merged.get(name)} warning />
 						))}
 					</div>
 				</>
@@ -140,7 +221,7 @@ export function Element({ id }: { id: string }) {
 	const [size, setSize] = useState<Size>(lastSize);
 	const [grid, setGrid] = useState(lastGrid);
 	const [scheme, setScheme] = useColorScheme();
-	const [used, setUsed] = useState<string[]>([]);
+	const [used, setUsed] = useState<Map<string, TokenUse>>(new Map());
 	const [shownId, setShownId] = useState(id);
 	if (shownId !== id) {
 		// another element: its own state at once, before anything renders (else the first preview URL of the new
@@ -150,7 +231,7 @@ export function Element({ id }: { id: string }) {
 		setVariant(null);
 		setChanged({});
 		setProps({});
-		setUsed([]);
+		setUsed(new Map());
 	}
 	const stage = useRef<HTMLDivElement>(null);
 	const room = useSize(stage);
@@ -205,17 +286,34 @@ export function Element({ id }: { id: string }) {
 		}
 	}, [preview.document, scheme, manifest.features.colorScheme]);
 
-	// the tokens the element uses, once the preview is rendered
+	// the states of a token shown without hovering, while the pointer is on its chip
+	const forced = usePointed();
+	useEffect(() => {
+		if (preview.document) {
+			forceStates(preview.document, forced ? pageNames(forced, tokensByName) : []);
+		}
+	}, [preview.document, forced, tokensByName]);
+
+	// the tokens the element uses, once the preview is rendered; again whenever its size changes: web components (a
+	// closed sl-details) set themselves up after the page, and opening a part shows tokens that were hidden
 	useEffect(() => {
 		const document = preview.document;
 		const view = document?.defaultView;
 		if (!document || !view || target.page) {
-			setUsed([]);
+			setUsed(new Map());
 			return;
 		}
-		const timer = view.setTimeout(() => setUsed(usedTokens(document).filter((name) => tokensByName.has(name))), 300);
-		return () => view.clearTimeout(timer);
-	}, [preview.document, tokensByName, target.page]);
+		let timer = view.setTimeout(() => setUsed(tokenUses(document)), 300);
+		const observer = new view.ResizeObserver(() => {
+			view.clearTimeout(timer);
+			timer = view.setTimeout(() => setUsed(tokenUses(document)), 300);
+		});
+		observer.observe(previewRoot(document));
+		return () => {
+			view.clearTimeout(timer);
+			observer.disconnect();
+		};
+	}, [preview.document, target.page]);
 
 	if (!entry) {
 		return <div className="sg-message">Dieses Element gibt es nicht.</div>;
@@ -327,7 +425,7 @@ export function Element({ id }: { id: string }) {
 						</section>
 						<section>
 							<h2 className="sg-panel-title">Verwendete Tokens</h2>
-							{used.length === 0 ? (
+							{used.size === 0 ? (
 								<p className="sg-muted">…</p>
 							) : (
 								<UsedTokens used={used} />

@@ -203,3 +203,13 @@ export function colorRows(options: Token[]): [string, Token[]][] {
 	}
 	return rows;
 }
+
+/**
+ * The names a page may use for a token: the token, its variants, the line height and paragraph spacing of a text
+ * style, the helper of the color scheme ("--shadow-raised-scheme")
+ */
+export function pageNames(name: string, tokens: Map<string, Token>): string[] {
+	const token = tokens.get(name);
+	const names = [name, `${name}-scheme`, ...(token?.variants ?? []).map((variant) => variant.token)];
+	return [...names, ...names.flatMap((candidate) => textStyleDetails(candidate, tokens))];
+}
