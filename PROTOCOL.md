@@ -181,7 +181,9 @@ The SvelteKit adapter reads all of it from the conventions of the stylesheets: a
 or `-xl` is its variant, and a semantic token points at the design groups its family refers to: the groups of the
 design tokens the tokens of its group (and its variant groups, "Semantic colors (light)" …) use in their defaults, of
 its namespace (`--color-`, `--spacing-` …). So the colors of the site offer the palette of the site, the colors of the
-event types their own; a family without such a reference offers every design group of its namespace.
+event types their own; a family without such a reference offers every design group of its namespace. An adapter in PHP gets the
+same from `Devclaim\NeosStyleguide\Tokens\TokenLayers` (with the subgroups of `ThemeTokens`); a theme without
+semantic groups has no layers there.
 
 ### `POST {adapter}/tokens/validate`
 

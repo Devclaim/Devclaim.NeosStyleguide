@@ -23,6 +23,8 @@ final readonly class DesignToken
         public string $groupDescription,
         /** the comment behind the token: "primary actions (buttons)" */
         public string $description,
+        /** a part of its group: the last "Subgroup: <label>" comment above it in the group ("Flächen"), "" without */
+        public string $subgroup = '',
     ) {
     }
 }

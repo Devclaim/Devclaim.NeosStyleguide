@@ -9,8 +9,8 @@ use Neos\Flow\Annotations as Flow;
 /**
  * The design tokens of a theme: the CSS custom properties of the theme blocks (Tailwind) of its stylesheets. The CSS is
  * the source, this reads it (name, default value, group, description), so there is no second list to keep in sync. A
- * comment "Group: <label> - <description>" starts a group, the comment behind a token describes it, other comments are
- * only comments.
+ * comment "Group: <label> - <description>" starts a group, "Subgroup: <label>" a part of it, the comment behind a token
+ * describes it, other comments are only comments. TokenLayers reads the layers and variants from the same conventions.
  *
  * A site overrides tokens in Neos (the property "designTokens" of its site node, one "--name: value;" per line):
  * rejection() says which overrides are allowed, overrides() turns them into CSS. The same rules as the SvelteKit
@@ -69,18 +69,22 @@ final readonly class ThemeTokens
         foreach ($blocks[1] as $block) {
             $group = '';
             $groupDescription = '';
+            $subgroup = '';
             // statements: comments and declarations (a declaration may span lines)
             preg_match_all(self::STATEMENT, $block, $statements);
             foreach (array_map(trim(...), $statements[0]) as $statement) {
                 if (preg_match(self::COMMENT, $statement, $comment)) {
-                    // the line "Group: <label> - <description>" of the comment (more lines are only for developers)
+                    // the lines "Group: <label> - <description>" and "Subgroup: <label>" of the comment (more lines are
+                    // only for developers)
                     foreach (explode("\n", $comment[1]) as $line) {
                         $line = trim((string)preg_replace('/^[ \t]*\*?[ \t]*/', '', $line));
                         if (str_starts_with($line, 'Group:')) {
                             preg_match('/^Group:\s*(.+?)(?:\s+-\s+(.*))?$/', $line, $groupComment);
                             $group = trim($groupComment[1] ?? '');
                             $groupDescription = trim($groupComment[2] ?? '');
-                            break;
+                            $subgroup = '';
+                        } elseif (str_starts_with($line, 'Subgroup:')) {
+                            $subgroup = trim(substr($line, strlen('Subgroup:')));
                         }
                     }
                     continue;
@@ -92,6 +96,7 @@ final readonly class ThemeTokens
                         group: $group,
                         groupDescription: $groupDescription,
                         description: $declaration[3] ?? '',
+                        subgroup: $subgroup,
                     );
                 }
             }
