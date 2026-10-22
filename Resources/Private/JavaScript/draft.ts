@@ -52,10 +52,15 @@ export function useTokenDraft(
 		return {
 			draft: current,
 			// what the previews get: the value of every token as it is now (draft, else saved, else default), so a
-			// preview loaded before a save stays right without loading again
+			// preview loaded before a save stays right without loading again. Not a token with variants unless it is
+			// set: its value is the page's, per width or scheme (media queries), which one rule on :root would replace
 			previewTokens: Object.fromEntries(
 				(tokens ?? [])
-					.filter((token) => token.editable)
+					.filter(
+						(token) =>
+							token.editable &&
+							(!token.variants?.length || current[token.name] !== undefined || overrides[token.name] !== undefined)
+					)
 					.map((token) => [
 						token.name,
 						(current[token.name] !== undefined && !invalid[token.name] ? current[token.name] : undefined) ??

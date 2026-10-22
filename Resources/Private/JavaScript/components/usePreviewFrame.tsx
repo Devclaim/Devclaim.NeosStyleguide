@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import type { PreviewDraft } from '../context';
-import { applyDraft, applyFontCss, contentHeight, frameDocument, watchHeight } from '../frames';
+import { applyDraft, applyFontCss, contentHeight, frameDocument, keepInPlace, watchHeight } from '../frames';
 
 /** the next page while it loads: in place of the shown one, invisible */
 const LOADING: CSSProperties = { position: 'absolute', top: 0, left: 0, visibility: 'hidden', pointerEvents: 'none' };
@@ -56,7 +56,8 @@ export function usePreviewFrame<L>(
 	const onLoad = (loaded: string, frame: HTMLIFrameElement) => {
 		const next = frameDocument(frame);
 		if (next) {
-			// ready before it is seen: the draft, what the screen needs, the height
+			// ready before it is seen: no navigation, the draft, what the screen needs, the height
+			keepInPlace(next);
 			applyDraft(next, latest.current.draft.tokens);
 			applyFontCss(next, latest.current.draft.fontCss);
 			latest.current.prepare?.(next);

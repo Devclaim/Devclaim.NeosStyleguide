@@ -39,6 +39,29 @@ export function applyDraft(document: Document, overrides: Record<string, string>
 }
 
 /**
+ * A preview stays where it is: links do not open (a click on one does nothing, in this page or another window) and
+ * forms are not sent. Buttons, details and the like still work. Captured before the page's own handlers.
+ */
+export function keepInPlace(document: Document) {
+	// not instanceof Element: the nodes of the preview belong to the window of its iframe. The path of the event, so a
+	// link inside a web component (shadow DOM) counts too
+	const isLink = (node: EventTarget) =>
+		'tagName' in node &&
+		(node.tagName === 'A' || node.tagName === 'AREA') &&
+		(node as unknown as { hasAttribute(name: string): boolean }).hasAttribute('href');
+	document.addEventListener(
+		'click',
+		(event) => {
+			if (event.composedPath().some(isLink)) {
+				event.preventDefault();
+			}
+		},
+		true
+	);
+	document.addEventListener('submit', (event) => event.preventDefault(), true);
+}
+
+/**
  * The @font-face rules of the fonts editors uploaded (Neos, not the adapter): a <style> in the head, so a font token
  * (draft or saved) can name any of them. An empty string removes it
  */
