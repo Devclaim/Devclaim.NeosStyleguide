@@ -37,6 +37,7 @@ JSON, `GET` unless noted. Every response that is an object has `"protocol": 2`.
     "viewports": [{ "id": "md", "label": "Tablet (768)", "width": 768, "height": 1024 }],
     "preview": "/neos/styleguide/preview?entry={entry}&site={site}",
     "gallery": "/neos/styleguide/preview?entries={entries}&site={site}",
+    "nodePreview": "/neos/styleguide/node?ref={ref}&site={site}",
     "features": { "grid": true, "colorScheme": true }
 }
 ```
@@ -47,6 +48,9 @@ JSON, `GET` unless noted. Every response that is an object has `"protocol": 2`.
     `props` (below) as query parameters.
 - `gallery` (optional): a URL template for many entries on one page (below); `{entries}` are ids separated by commas.
     Without it the interface lists the entries as cards.
+- `nodePreview` (optional): a URL template for a Neos node in a certain state, rendered as the website renders it
+    (below, "Node previews"); `{ref}` is a node reference, URL encoded. Used by the backend modules that compare
+    changes (the activity log); without it they show the changed fields only.
 - `features`: what the preview can do beyond the basics (below); missing ones are `false`. `grid`: it draws the page
     grid of the website while `<html>` has the attribute `data-styleguide-grid`. `colorScheme`: it shows the color
     scheme `<html>` names in `data-color-scheme` (`light` or `dark`), whether the site has a dark mode or not, so the
@@ -220,6 +224,22 @@ an element with `data-styleguide-entry="<id>"`, all inside `data-styleguide-root
 interface shows it at the width of a viewport (scaled into its room), reserves room above each entry (a style in the
 head: a `margin-top` on `[data-styleguide-entry]`) and puts its own labels there; the page needs nothing for that.
 
+### Node previews
+
+The URL of the manifest's `nodePreview` template: not an entry of the styleguide but a node of the content repository,
+in a state named by a **node reference** `<prefix>:<reference>`, e.g. `activity:123:before` (the node of entry 123 of
+the activity log, before its change). Neos resolves it (`Devclaim\NeosStyleguide\NodeReferences\NodeReferences`, the
+resolver registered for the prefix in the setting `Devclaim.NeosStyleguide.nodeReferences`); the resolver decides
+who may see it. The page renders that node as the website renders it in its document, in the theme of `site`, inside
+`data-styleguide-root`, and nothing else: no script, the backend module sizes its frame to the root element and marks
+the changed words in it itself.
+
+When the node cannot be resolved (gone, no access) or the website does not render it on its own (a part of the page
+layout), the page shows a short note inside the root element and marks it with `data-node-preview-unavailable`.
+
+An adapter in PHP resolves the reference with `NodeReferences::resolve()`; an adapter outside of Neos asks the API of
+its project, which resolves it and serializes the node in its own format (the SvelteKit adapter: the headless API).
+
 ### What the interface does with it
 
 The previews are on the origin of the Neos backend, like the interface, so the interface works on their documents
@@ -292,7 +312,9 @@ an adapter. In the order worth building, each step shows more in the styleguide:
     the editor's cookie (the answer is the check); an adapter inside Neos (a Flow controller) gets the session when its
     controller is matched by a request pattern of the provider `Neos.Neos:Backend` (`Configuration/Settings.yaml` of
     this package does that for `ApiController`), and reads the site node in the editor's workspace itself.
-6. **Point the interface to it:** `adapter` of the `frontendConfiguration` `Devclaim.NeosStyleguide` of the Neos UI
+6. **Node previews** (optional, `nodePreview`): a page that renders a node reference (above, "Node previews"), so
+    the backend modules show changes as the website shows them.
+7. **Point the interface to it:** `adapter` of the `frontendConfiguration` `Devclaim.NeosStyleguide` of the Neos UI
     (`Configuration/Settings.yaml`), then check it.
 
 An adapter in PHP (CPX, Fusion) is a Flow package with a controller for the adapter API and the preview, like
