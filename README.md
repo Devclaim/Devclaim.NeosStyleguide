@@ -1,6 +1,7 @@
 # Devclaim.NeosStyleguide
 
-A styleguide in the Neos content module, for any frontend. "Styleguide" in the top bar shows the components of the
+A styleguide in the Neos content module, for any frontend. Its button in the top bar (a palette, a cross while it is
+open) shows the components of the
 website with their use cases, in the design of the site, and lets editors change the site's design tokens (colors,
 fonts, sizes …) right next to them. Changes save themselves into the editor's workspace like an inline edit;
 publishing and discarding stay Neos' own workflow.
