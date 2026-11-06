@@ -5,6 +5,7 @@ import { connectStore } from './neos';
 import { useViewState } from './store';
 import { StyleguideView } from './StyleguideView';
 import { ToolbarButton } from './ToolbarButton';
+import '../preview.css';
 import '../App.css';
 
 /** the view below the top bar: a container of the Neos UI, shown while "Styleguide" in the top bar is pressed */

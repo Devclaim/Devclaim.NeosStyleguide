@@ -167,6 +167,25 @@ function Results({ term, kinds, current }: { term: string; kinds: Kind[]; curren
 	);
 }
 
+/** the two areas of the styleguide: in the navigation, on narrow screens in the bar above the screen (StyleguideView) */
+export function AreaSwitch({ route }: { route: Route }) {
+	const onTokens = route.screen === 'tokens';
+	return (
+		<div className="sg-rail__switch" role="group" aria-label="Bereich">
+			<button
+				type="button"
+				aria-pressed={onTokens}
+				onClick={() => navigate({ screen: 'tokens', kind: lastKind, layer: lastLayer })}
+			>
+				Tokens
+			</button>
+			<button type="button" aria-pressed={!onTokens} onClick={() => navigate({ screen: 'elements', level: null })}>
+				Elemente
+			</button>
+		</div>
+	);
+}
+
 /** the navigation: tokens by kind, or elements by level (the entries of the open level below it) */
 export function Rail({ route, onClose }: { route: Route; onClose: () => void }) {
 	const data = useData();
@@ -208,18 +227,7 @@ export function Rail({ route, onClose }: { route: Route; onClose: () => void }) 
 
 	return (
 		<nav className="sg-rail" aria-label="Styleguide">
-			<div className="sg-rail__switch" role="group" aria-label="Bereich">
-				<button
-					type="button"
-					aria-pressed={onTokens}
-					onClick={() => navigate({ screen: 'tokens', kind: lastKind, layer: lastLayer })}
-				>
-					Tokens
-				</button>
-				<button type="button" aria-pressed={!onTokens} onClick={() => navigate({ screen: 'elements', level: null })}>
-					Elemente
-				</button>
-			</div>
+			<AreaSwitch route={route} />
 
 			<input
 				type="search"

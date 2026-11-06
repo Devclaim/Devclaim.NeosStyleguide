@@ -21,8 +21,25 @@ const options = {
 	legalComments: 'external'
 };
 
-if (isWatch) {
-	await (await esbuild.context(options)).watch();
-} else {
-	await esbuild.build(options);
+/**
+ * The window of a preview for the pages of the backend modules, which have neither React nor the plugin
+ * (Resources/Private/JavaScript/preview.global.ts) → Resources/Public/Preview/Preview.js and Preview.css
+ */
+/** @type {import("esbuild").BuildOptions} */
+const previewOptions = {
+	entryPoints: { Preview: './Resources/Private/JavaScript/preview.global.ts' },
+	outdir: './Resources/Public/Preview',
+	minify: true,
+	logLevel: 'info',
+	target: 'es2020',
+	bundle: true,
+	format: 'iife'
+};
+
+for (const buildOptions of [options, previewOptions]) {
+	if (isWatch) {
+		await (await esbuild.context(buildOptions)).watch();
+	} else {
+		await esbuild.build(buildOptions);
+	}
 }

@@ -3,15 +3,19 @@ import { useEffect, useRef, useState } from 'react';
 import { galleryUrl } from '../api';
 import { useData } from '../context';
 import { showColorScheme } from '../frames';
+import { INSET } from '../preview';
 import type { EntrySummary } from '../protocol';
 import { navigate } from '../route';
 import type { ColorScheme } from './ColorSchemes';
 import { useStageStyle } from './stageHeight';
-import { LoadingBar, usePreviewFrame } from './usePreviewFrame';
+import { LoadingBar, PreviewPlaceholder, usePreviewFrame } from './usePreviewFrame';
 import { useWidth } from './useWidth';
 
 /** the height of a label over an entry, in px of the interface */
 const LABEL = 36;
+
+/** the stage before its page, in px of the interface: taller than the screen, the page will be too */
+const EMPTY_HEIGHT = 1400;
 
 /** room for the labels in the page, in its own px (the page is scaled), and every entry clipped to itself */
 function reserveLabels(document: Document, scale: number) {
@@ -46,14 +50,14 @@ export function Gallery({
 	const { manifest, site, previewDraft } = useData();
 	const container = useRef<HTMLDivElement>(null);
 	const room = useWidth(container);
-	const scale = room > 0 ? Math.min(1, room / width) : 1;
+	const scale = room > 0 ? Math.min(1, Math.max(1, room - 2 * INSET) / width) : 1;
 	const [places, setPlaces] = useState<{ id: string; top: number }[]>([]);
 	const src = galleryUrl(
 		manifest,
 		entries.map((entry) => entry.id),
 		site.key
 	);
-	const preview = usePreviewFrame(src, null, previewDraft, (document) => {
+	const preview = usePreviewFrame(src, width, previewDraft, (document) => {
 		reserveLabels(document, scale);
 		if (scheme) {
 			showColorScheme(document, scheme);
@@ -88,7 +92,11 @@ export function Gallery({
 	}, [preview.document, preview.height, scale]);
 
 	const height = preview.height || 600;
-	const stageStyle = useStageStyle(!!preview.document, height * scale, 600 * scale, width * scale);
+	const stageStyle = useStageStyle(
+		preview.height ? height * scale + INSET : EMPTY_HEIGHT,
+		width * scale + 2 * INSET,
+		room > 0
+	);
 
 	if (!src) {
 		return null;
@@ -97,14 +105,16 @@ export function Gallery({
 
 	return (
 		<div ref={container} className="sg-gallery">
-			<div className="sg-gallery__stage" style={stageStyle}>
-				{!preview.document && <p className="sg-muted sg-gallery__loading">Vorschau wird geladen …</p>}
-				<LoadingBar active={preview.loading} />
-				{preview.render({
-					title: 'Elemente',
-					className: 'sg-gallery__frame',
-					style: { width, height, transform: `scale(${scale})` }
-				})}
+			<div className="sg-gallery__stage dc-preview-window" style={{ ...stageStyle, background: preview.background ?? undefined }}>
+				<LoadingBar active={preview.loading && preview.ready} />
+				{/* the labels lie at the top of the page: room only at the sides and below */}
+				<div className="sg-stage__sheet" style={{ inset: `0 ${INSET}px ${INSET}px` }}>
+					{preview.render({
+						title: 'Elemente',
+						className: 'sg-gallery__frame',
+						style: { width, height, transform: `scale(${scale})` }
+					})}
+				</div>
 				{places.map((place, index) => {
 					const entry = titles.get(place.id);
 					return entry ? (
@@ -128,6 +138,7 @@ export function Gallery({
 						</div>
 					) : null;
 				})}
+				<PreviewPlaceholder active={!preview.ready} />
 			</div>
 		</div>
 	);

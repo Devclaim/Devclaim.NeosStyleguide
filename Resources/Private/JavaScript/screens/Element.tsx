@@ -4,18 +4,22 @@ import { previewUrl } from '../api';
 import { ColorSchemes, useColorScheme } from '../components/ColorSchemes';
 import { StateDot, tokenState } from '../components/Rail';
 import { useStageStyle } from '../components/stageHeight';
-import { LoadingBar, usePreviewFrame } from '../components/usePreviewFrame';
+import { LoadingBar, PreviewPlaceholder, usePreviewFrame } from '../components/usePreviewFrame';
 import { useSize } from '../components/useWidth';
-import { type Size, viewportSizes, Viewports } from '../components/Viewports';
+import { initialSize, type Size, viewportSizes, Viewports } from '../components/Viewports';
 import { useData } from '../context';
 import { forceStates, previewRoot, showColorScheme, showGrid, type TokenUse, tokenUses } from '../frames';
+import { INSET } from '../preview';
 import type { Editor, EntryDetails } from '../protocol';
 import { hasLayers, pageNames, resolveToken, shortName, valueName } from '../tokens';
 import { shownToken } from '../usage';
 
 // outside of React: the choices stay while the view is open
-let lastSize: Size = 'desktop';
+let lastSize: Size = initialSize();
 let lastGrid = false;
+
+/** the stage of a page never seen, in px of the interface */
+const EMPTY_HEIGHT = 320;
 
 /** a pause in typing a prop, then the preview loads with it */
 const PROPS_DELAY = 250;
@@ -253,13 +257,21 @@ export function Element({ id }: { id: string }) {
 	});
 	// while the next page loads, the room keeps the layout of the shown one (no stretched old preview)
 	const { page, width } = preview.loading ? (preview.shownLayout ?? target) : target;
-	const scaleOf = (frameWidth: number) => (room.width > 0 ? Math.min(1, room.width / frameWidth) : 1);
-	const scale = scaleOf(width);
+	// a page fills the room like a browser window, an element lies on a sheet
+	const insetOf = (isPage: boolean) => (isPage ? 0 : INSET);
+	const scaleOf = (frameWidth: number, isPage: boolean) =>
+		room.width > 0 ? Math.min(1, Math.max(1, room.width - 2 * insetOf(isPage)) / frameWidth) : 1;
+	const scale = scaleOf(width, page);
+	const inset = insetOf(page);
 	// a page: as high as the room (in pixels of the page, before scaling); else as high as what it shows
 	const heightOf = (isPage: boolean, frameScale: number) =>
 		isPage ? Math.max(1, Math.floor(room.height / frameScale)) : preview.height || 240;
 	const height = heightOf(page, scale);
-	const stageStyle = useStageStyle(!!preview.document, height * scale, 240 * scale, width * scale);
+	const stageStyle = useStageStyle(
+		page || preview.height ? height * scale + 2 * inset : EMPTY_HEIGHT,
+		width * scale + 2 * inset,
+		room.width > 0
+	);
 
 	useEffect(() => {
 		data.api
@@ -386,18 +398,21 @@ export function Element({ id }: { id: string }) {
 			</header>
 			<div className={page ? 'sg-content sg-content--page' : 'sg-content'}>
 				<div ref={stage} className={page ? 'sg-preview sg-preview--page' : 'sg-preview'}>
-					<div className="sg-preview__stage" style={stageStyle}>
-						<LoadingBar active={preview.loading} />
-						{preview.render({
-							title: entry.title,
-							className: 'sg-preview__frame',
-							style: { width, height, transform: `scale(${scale})` },
-							pendingStyle: {
-								width: target.width,
-								height: heightOf(target.page, scaleOf(target.width)),
-								transform: `scale(${scaleOf(target.width)})`
-							}
-						})}
+					<div className="sg-preview__stage dc-preview-window" style={{ ...stageStyle, background: preview.background ?? undefined }}>
+						<LoadingBar active={preview.loading && preview.ready} />
+						<div className="sg-stage__sheet" style={{ inset }}>
+							{preview.render({
+								title: entry.title,
+								className: 'sg-preview__frame',
+								style: { width, height, transform: `scale(${scale})` },
+								pendingStyle: {
+									width: target.width,
+									height: heightOf(target.page, scaleOf(target.width, target.page)),
+									transform: `scale(${scaleOf(target.width, target.page)})`
+								}
+							})}
+						</div>
+						<PreviewPlaceholder active={!preview.ready} />
 					</div>
 				</div>
 

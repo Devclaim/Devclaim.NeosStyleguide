@@ -15,7 +15,7 @@ const PROBLEMS: Record<string, string> = {
  * The right column of the styleguide, where the inspector of Neos would be: the editor of the selected token, or every
  * token by kind; a problem with saving. Changes save themselves; publishing is the top bar's.
  */
-export function DesignPanel() {
+export function DesignPanel({ onClose }: { onClose: () => void }) {
 	const data = useData();
 	const view = useViewState();
 	// a variant opens its semantic token, with the variant chosen
@@ -48,6 +48,12 @@ export function DesignPanel() {
 						</span>
 					)}
 				</span>
+				{/* only where the panel lies over the screen */}
+				<button type="button" className="sg-icon-button sg-panel__close" aria-label="Design schließen" onClick={onClose}>
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+						<path d="M6 6l12 12M18 6L6 18" />
+					</svg>
+				</button>
 			</div>
 			<div className="sg-panel__body">
 				{token ? (

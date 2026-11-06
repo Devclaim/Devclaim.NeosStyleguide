@@ -3,6 +3,9 @@ import type { Viewport } from '../protocol';
 
 export type Size = 'mobile' | 'tablet' | 'desktop';
 
+/** the width to start with: on a phone a desktop page would be scaled down until nothing can be read */
+export const initialSize = (): Size => (window.matchMedia('(max-width: 760px)').matches ? 'mobile' : 'desktop');
+
 /** the widths to choose from: the smallest viewport of the manifest, one around 768 px, the widest up to 1440 px */
 export function viewportSizes(viewports: Viewport[]): Partial<Record<Size, Viewport>> {
 	const sorted = [...viewports].sort((a, b) => a.width - b.width);

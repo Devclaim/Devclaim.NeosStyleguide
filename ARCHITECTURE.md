@@ -97,7 +97,14 @@ entry uses (the `var(--…)` of every style rule that matches the root or an ele
 sets the grid attribute.
 
 A new preview URL (another element, use case, prop) never shows an empty frame: it loads in a second, hidden iframe,
-gets the draft and its height there and then takes the place of the shown one (`components/usePreviewFrame.tsx`).
+gets the draft, its fonts and its height there and then takes the place of the shown one
+(`components/usePreviewFrame.tsx`). Before the first page of a stage there is a grey placeholder, as high as the page was
+the last time. Elements lie on a sheet in the color of their page, with a little room around the iframe (not in it: the
+page keeps the width of its viewport).
+
+The window around a preview (rounded, the sheet, the placeholder, waiting for the fonts) is shared: `preview.css`, `preview.ts`
+and `frames.ts`, in the plugin and, for the backend modules without React, as `Resources/Public/Preview/Preview.js` and
+`Preview.css` (`window.DevclaimPreview`, used by the compare of `Devclaim.NeosModernBackend`).
 
 ## 5. The interface in the Neos UI
 

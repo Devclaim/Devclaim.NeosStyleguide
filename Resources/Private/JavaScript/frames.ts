@@ -95,6 +95,31 @@ export function contentHeight(document: Document): number {
 	return Math.max(1, Math.ceil(root.getBoundingClientRect().bottom + (document.defaultView?.scrollY ?? 0)));
 }
 
+/** the longest a new page may keep the screen waiting for its fonts */
+const SETTLE_MS = 600;
+
+/**
+ * Resolves when the page has its real size: it was laid out once, which starts its fonts, and they are there (text in a
+ * fallback font has another height). A font that takes too long does not hold the preview back.
+ */
+export function settled(document: Document): Promise<void> {
+	const laidOut = new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+	const limit = new Promise<void>((resolve) => window.setTimeout(resolve, SETTLE_MS));
+	return Promise.race([laidOut.then(() => document.fonts.ready).then(() => undefined), limit]);
+}
+
+/** the color a page lies on: the background of its body, else of its <html>; null if it has none of its own */
+export function pageBackground(document: Document): string | null {
+	const view = document.defaultView;
+	for (const element of [document.body, document.documentElement]) {
+		const color = element && view ? view.getComputedStyle(element).backgroundColor : '';
+		if (color && color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
+			return color;
+		}
+	}
+	return null;
+}
+
 /**
  * calls back with the height of what the preview shows (down to the bottom of its root, so the iframe also gets
  * smaller), now and whenever it changes; returns the stop function

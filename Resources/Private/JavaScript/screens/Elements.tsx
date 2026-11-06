@@ -2,12 +2,12 @@ import * as React from 'react';
 import { useState } from 'react';
 import { ColorSchemes, useColorScheme } from '../components/ColorSchemes';
 import { Gallery } from '../components/Gallery';
-import { type Size, viewportSizes, Viewports } from '../components/Viewports';
+import { initialSize, type Size, viewportSizes, Viewports } from '../components/Viewports';
 import { useData } from '../context';
 import { navigate } from '../route';
 
 // outside of React: the choice stays while the view is open
-let lastSize: Size = 'desktop';
+let lastSize: Size = initialSize();
 
 /** the elements of a level (or all) in one gallery; whole pages as cards */
 export function Elements({ level }: { level: string | null }) {

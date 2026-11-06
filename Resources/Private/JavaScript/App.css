@@ -6,12 +6,13 @@
  */
 
 #neos-styleguide-view {
-	/* top: StyleguideView.tsx; below the dropdowns of the Neos top bar (z-index 40) */
+	/* top: StyleguideView.tsx; over the second bar, which can lie above the page (phones, Devclaim.NeosModernBackend), and
+	   below the dropdowns of the Neos top bar (z-index 40) */
 	position: fixed;
 	right: 0;
 	bottom: 0;
 	left: 0;
-	z-index: 30;
+	z-index: 39;
 	background: #161616;
 	color: #e8e8e8;
 	font-family: 'Noto Sans', system-ui, sans-serif;
@@ -178,8 +179,25 @@
 
 /* the frame: navigation and screen */
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-app {
+	position: relative;
 	display: flex;
 	height: 100%;
+	overflow: hidden;
+}
+
+/* the bar for the columns that do not fit (narrow screens, below) and the screen */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-stack {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-bar,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-backdrop,
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__close {
+	display: none;
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail {
@@ -345,8 +363,11 @@
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-main {
+	display: flex;
 	flex: 1 1 auto;
+	flex-direction: column;
 	min-width: 0;
+	min-height: 0;
 	overflow-y: auto;
 	/* scrolls without a scrollbar: one would narrow the screen and move the preview when an element gets longer */
 	scrollbar-width: none;
@@ -361,6 +382,7 @@
 	top: 0;
 	z-index: 2;
 	display: flex;
+	flex: none;
 	align-items: center;
 	gap: 12px;
 	height: 56px;
@@ -385,6 +407,7 @@
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-content {
 	display: flex;
+	flex: none;
 	flex-direction: column;
 	gap: 28px;
 	padding: 4px 28px 40px;
@@ -459,7 +482,7 @@
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rows--columns {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
 	column-gap: 28px;
 }
 
@@ -622,21 +645,16 @@
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__stage {
-	position: relative;
 	margin: 0 auto;
-	border-radius: 6px;
+}
+
+/* the iframes of a stage, inside the room of the sheet around them (preview.ts INSET) */
+:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-stage__sheet {
+	position: absolute;
 	overflow: hidden;
-	background: #fbfaf7;
 }
 
-/* the stages follow the size of their preview smoothly, at the same speed for every distance (the duration comes
-   from stageHeight.ts); the old page fades out over the new one */
-:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-gallery__stage, .sg-preview__stage) {
-	transition-property: height, width;
-	transition-duration: 220ms;
-	transition-timing-function: ease-in-out;
-}
-
+/* the old page fades out over the new one */
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-frame--leaving {
 	animation: sg-fade-out 180ms ease forwards;
 }
@@ -687,10 +705,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-gallery__stage, .sg-preview__stage) {
-		transition: none;
-	}
-
 	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-frame--leaving {
 		animation-duration: 1ms;
 	}
@@ -708,13 +722,6 @@
 	border: 0;
 	background: #fbfaf7;
 	transform-origin: 0 0;
-}
-
-:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-gallery__loading {
-	position: absolute;
-	inset: 20px;
-	margin: 0;
-	color: #6b6b6b;
 }
 
 /* the labels are the interface's, not the website's: bars like the header of the screen over the room reserved in the
@@ -750,7 +757,7 @@
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-cards {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
 	gap: 8px;
 }
 
@@ -800,17 +807,13 @@
 }
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-preview__stage {
-	/* the next preview loads on top of the shown one, invisible (usePreviewFrame.tsx) */
-	position: relative;
 	margin: 0 auto;
-	border-radius: 6px;
-	overflow: hidden;
-	background: #fbfaf7;
 }
 
 /* a whole page: the preview fills the room below the header and scrolls inside */
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-content--page {
-	height: calc(100% - 56px);
+	flex: 1 1 0;
+	min-height: 0;
 	padding-bottom: 28px;
 	gap: 20px;
 }
@@ -822,7 +825,7 @@
 
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-columns {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
 	gap: 28px;
 }
 
@@ -1461,4 +1464,216 @@
 :is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-chip__note {
 	color: #8c8c8c;
 	font-size: 11px;
+}
+
+/*
+ * Narrow screens. Below 1100 px the design panel lies over the screen, below 760 px the navigation too (StyleguideView
+ * data-drawer); a bar opens them. At the end of the file: the same specificity as the rules they change.
+ */
+@media (max-width: 1100px) {
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-bar {
+		display: flex;
+		flex: none;
+		align-items: center;
+		gap: 8px;
+		height: 44px;
+		padding: 0 8px;
+		background: #1e1e1e;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-bar__button {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		height: 36px;
+		padding: 0 12px;
+		border: 0;
+		border-radius: 6px;
+		background: transparent;
+		color: #e8e8e8;
+		font-size: 13px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-bar__button--rail,
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-bar .sg-rail__switch {
+		display: none;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-backdrop {
+		position: absolute;
+		inset: 0;
+		z-index: 4;
+		display: block;
+		padding: 0;
+		border: 0;
+		background: rgba(0, 0, 0, 0.5);
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel {
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 5;
+		/* a strip of the screen stays, a tap on it closes the panel */
+		width: min(360px, calc(100% - 44px));
+		border-left: 0;
+		visibility: hidden;
+		transform: translateX(100%);
+		transition: transform 200ms ease, visibility 200ms;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-app[data-drawer='panel'] .sg-panel {
+		visibility: visible;
+		transform: none;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__head {
+		align-items: center;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-panel__close {
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		margin: -8px -8px -8px auto;
+	}
+}
+
+@media (max-width: 760px) {
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-bar__button--rail {
+		display: flex;
+		padding: 0 10px;
+	}
+
+	/* the areas stay in reach, in the bar and not behind the button of the navigation */
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-bar .sg-rail__switch {
+		display: flex;
+		flex: 1 1 auto;
+		min-width: 0;
+		max-width: 220px;
+		margin: 0;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail .sg-rail__switch {
+		display: none;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 5;
+		width: min(320px, calc(100% - 44px));
+		border-right: 0;
+		visibility: hidden;
+		transform: translateX(-100%);
+		transition: transform 200ms ease, visibility 200ms;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-app[data-drawer='rail'] .sg-rail {
+		visibility: visible;
+		transform: none;
+	}
+
+	/* not sticky: its two lines would take a good part of a phone */
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header {
+		position: static;
+		flex-wrap: wrap;
+		gap: 8px 12px;
+		height: auto;
+		min-height: 56px;
+		padding: 12px 16px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header h1 {
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+
+	/* the controls in a line of their own */
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header .sg-header__spacer {
+		flex-basis: 100%;
+		height: 0;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-header-select {
+		flex: 1 1 120px;
+		min-width: 0;
+		max-width: none;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-content {
+		gap: 20px;
+		padding: 4px 16px 28px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-content--page {
+		padding-bottom: 16px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-message {
+		padding: 16px;
+	}
+
+	/* big enough for a finger */
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-segmented button {
+		width: 40px;
+		height: 34px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-rail__item {
+		min-height: 40px;
+	}
+
+	/* below 16 px a phone zooms into a field */
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-input, .sg-header-select) {
+		font-size: 16px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-prop {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 4px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row__sample {
+		flex-basis: 88px;
+	}
+
+	/* the columns of the variants do not fit next to the name: in a line of their own, sharing it */
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-row--semantic {
+		flex-wrap: wrap;
+		padding-block: 8px;
+	}
+
+	/* important: the width of a single value is set on the element (TokensOverview.tsx) */
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-row--semantic, .sg-section__head) .sg-variants {
+		flex-shrink: 1;
+		width: 100% !important;
+		margin-left: 0;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-section__head {
+		flex-wrap: wrap;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) .sg-section__head .sg-variants {
+		padding: 0 8px;
+	}
+
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-row--semantic, .sg-section__head) .sg-variant {
+		flex: 1 1 0;
+		width: auto;
+		min-width: 0;
+	}
+}
+
+@media (max-width: 1100px) and (prefers-reduced-motion: reduce) {
+	:is(#neos-styleguide-view, #neos-styleguide-toggle) :is(.sg-rail, .sg-panel) {
+		transition: none;
+	}
 }
